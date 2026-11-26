@@ -59,7 +59,19 @@ python3 --version
 
 ## Utilisation
 
-### Interface en Ligne de Commande (Recommandé)
+### Interface graphique (Recommandé)
+
+Ouvrez simplement le fichier **`interface.html`** en double-cliquant dessus : il s'ouvre dans votre navigateur.
+Rien à installer, pas de ligne de commande, et cela marche aussi sur téléphone et sans connexion Internet.
+
+L'interface propose trois onglets :
+- **Générer** : choisissez la méthode (au hasard, grille équilibrée ou avec vos numéros favoris), le nombre de grilles (1 à 20), puis touchez « Générer ». Chaque grille peut être copiée ou vérifiée.
+- **Ma grille** : cochez 5 numéros et 1 numéro Chance comme sur un vrai bulletin, obtenez l'analyse de la grille, puis comparez-la à un tirage pour voir le rang obtenu.
+- **Probabilités** : le tableau des 9 rangs de gain et un calculateur pour n'importe quelle combinaison.
+
+Votre grille, vos favoris et vos réglages sont retenus par le navigateur d'une visite à l'autre.
+
+### Interface en Ligne de Commande
 
 Lancez l'interface interactive:
 
@@ -170,8 +182,10 @@ Numéros favoris utilisés: 7, 13, 27, 41
 
 ```
 Calculateur-Proba-Loto/
+├── interface.html        # Interface graphique (à ouvrir dans le navigateur)
 ├── loto_calculator.py    # Module principal (calculs et génération)
 ├── loto_cli.py          # Interface en ligne de commande
+├── exemples.py          # Exemples d'utilisation du module
 ├── README.md            # Documentation
 └── .gitignore          # Fichiers à ignorer
 ```
