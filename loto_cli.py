@@ -3,7 +3,7 @@
 Interface en ligne de commande pour le calculateur de Loto
 """
 import sys
-from loto_calculator import LotoCalculator, LotoGridGenerator
+from loto_calculator import LotoCalculator, LotoGridGenerator, format_number
 
 
 def print_menu():
@@ -18,9 +18,10 @@ def print_menu():
     print("  4. Générer plusieurs grilles aléatoires")
     print("  5. Générer une grille avec numéros favoris")
     print("  6. Analyser une grille personnalisée")
-    print("  7. Calculer la probabilité d'un rang spécifique")
+    print("  7. Calculer la probabilité d'une combinaison")
     print("  0. Quitter")
     print("=" * 70)
+    print("Astuce: pour une interface graphique, ouvrez le fichier interface.html")
 
 
 def option_1_probabilities():
@@ -72,6 +73,7 @@ def option_5_hot_numbers():
     """Option 5: Générer avec numéros favoris"""
     print("\nEntrez vos numéros favoris (entre 1 et 49)")
     print("Séparez-les par des espaces (ex: 7 13 23 27 41)")
+    print("La grille reprendra 2 ou 3 de vos favoris, complétés au hasard.")
 
     try:
         input_str = input("Numéros favoris: ")
@@ -141,7 +143,7 @@ def option_6_analyze_custom():
 
 def option_7_specific_probability():
     """Option 7: Calculer la probabilité d'un rang spécifique"""
-    print("\nCalcul de probabilité pour un rang spécifique")
+    print("\nCalcul de probabilité pour une combinaison")
 
     try:
         correct_nums = int(input("Combien de numéros corrects? (0-5): "))
@@ -160,10 +162,16 @@ def option_7_specific_probability():
         print("=" * 70)
         print(f"Configuration: {correct_nums} numéro(s) correct(s)", end="")
         print(f" + numéro chance" if correct_chance else " sans numéro chance")
-        print(f"\nCombinaisons favorables: {result['favorable_outcomes']:,}")
-        print(f"Combinaisons totales: {result['total_combinations']:,}")
+        print(f"\nCombinaisons favorables: {format_number(result['favorable_outcomes'])}")
+        print(f"Combinaisons totales: {format_number(result['total_combinations'])}")
         print(f"Probabilité: {result['probability']:.10f} ({result['probability']*100:.8f}%)")
-        print(f"Chances de gagner: {result['odds']}")
+        print(f"Chances: {result['odds']}")
+        if result['rank'] is None:
+            print("Gain: aucun (il faut au moins 2 bons numéros, ou le numéro chance)")
+        elif result['rank'] == 9:
+            print("Gain: rang 9 (le rang 9 regroupe 0 ou 1 bon numéro + numéro chance)")
+        else:
+            print(f"Gain: rang {result['rank']}")
         print("=" * 70)
 
     except ValueError:

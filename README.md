@@ -12,7 +12,7 @@ Le Loto français fonctionne selon les règles suivantes:
 ## Fonctionnalités
 
 ### 1. Calcul des Probabilités
-- Calcul précis des probabilités pour tous les rangs de gain
+- Calcul précis des probabilités pour les 9 rangs de gain
 - Affichage des chances de gagner (ex: "1 sur 19 068 840")
 - Pourcentages et statistiques détaillées
 
@@ -22,15 +22,15 @@ Le Loto français fonctionne selon les règles suivantes:
 Génération complètement aléatoire d'une grille de Loto.
 
 #### Grille Équilibrée
-Génère une grille optimisée avec:
-- Répartition sur différentes tranches de numéros (1-10, 11-20, etc.)
-- Équilibre entre nombres pairs et impairs
-- Distribution intelligente
+Génère une grille au hasard qui respecte toujours:
+- 2 ou 3 numéros pairs (et donc 2 ou 3 impairs)
+- 2 ou 3 numéros bas entre 1 et 24 (et donc 2 ou 3 hauts entre 25 et 49)
+- Des numéros dans au moins 3 tranches différentes (1-10, 11-20, 21-30, 31-40, 41-49)
 
 #### Grille avec Numéros Favoris
 Intègre vos numéros favoris ou "chauds" dans la grille générée:
 - Choisissez vos numéros porte-bonheur
-- 2-3 numéros favoris seront inclus dans la grille
+- 2 ou 3 de vos numéros favoris seront inclus dans la grille (un seul favori fonctionne aussi)
 - Complété automatiquement avec des numéros aléatoires
 
 #### Génération Multiple
@@ -42,6 +42,7 @@ Pour chaque grille générée ou personnalisée, obtenez:
 - Somme totale des numéros
 - Nombre de pairs vs impairs
 - Répartition bas (1-24) vs hauts (25-49)
+- Nombre de tranches couvertes (1-10, 11-20, etc.)
 - Détection de numéros consécutifs
 
 ## Installation
@@ -87,7 +88,7 @@ Menu disponible:
 4. Générer plusieurs grilles aléatoires
 5. Générer une grille avec numéros favoris
 6. Analyser une grille personnalisée
-7. Calculer la probabilité d'un rang spécifique
+7. Calculer la probabilité d'une combinaison
 0. Quitter
 ```
 
@@ -102,9 +103,15 @@ calc = LotoCalculator()
 # Afficher toutes les probabilités
 calc.display_probabilities()
 
-# Calculer une probabilité spécifique
+# Calculer la probabilité d'une combinaison précise
 prob = calc.probability_rank(correct_numbers=5, correct_chance=True)
-print(f"Probabilité de gagner le jackpot: {prob['odds']}")
+print(f"Probabilité de gagner le jackpot: {prob['odds']}")  # 1 sur 19 068 840
+
+# Probabilité d'un rang de gain (1 à 9)
+print(calc.probability_of_rank(9)['odds'])  # 1 sur 10,8
+
+# Rang obtenu avec 3 bons numéros + numéro chance
+print(calc.rank_for(3, True))  # 5
 
 # Générer des grilles
 gen = LotoGridGenerator()
@@ -142,13 +149,16 @@ Cela affichera:
 
 | Rang | Combinaison | Probabilité | Chances |
 |------|-------------|-------------|---------|
-| 1 | 5 numéros + chance | 0.00000524% | 1 sur 19 068 840 |
-| 2 | 5 numéros | 0.00004719% | 1 sur 2 118 760 |
-| 3 | 4 numéros + chance | 0.00045686% | 1 sur 218 901 |
-| 4 | 4 numéros | 0.00411172% | 1 sur 24 322 |
-| 5 | 3 numéros + chance | 0.02284301% | 1 sur 4 378 |
-| 6 | 3 numéros | 0.20558713% | 1 sur 486 |
-| 7 | 2 numéros + chance | 0.14228112% | 1 sur 703 |
+| 1 | 5 numéros + chance | 0,00000524 % | 1 sur 19 068 840 |
+| 2 | 5 numéros | 0,0000472 % | 1 sur 2 118 760 |
+| 3 | 4 numéros + chance | 0,00115 % | 1 sur 86 677 |
+| 4 | 4 numéros | 0,0104 % | 1 sur 9 631 |
+| 5 | 3 numéros + chance | 0,0496 % | 1 sur 2 016 |
+| 6 | 3 numéros | 0,446 % | 1 sur 224 |
+| 7 | 2 numéros + chance | 0,695 % | 1 sur 144 |
+| 8 | 2 numéros | 6,25 % | 1 sur 16 |
+| 9 | 0 ou 1 numéro + chance | 9,25 % | 1 sur 10,8 |
+| | **Au moins un rang** | **16,7 %** | **1 sur 6** |
 
 ## Exemples de Grilles Générées
 
@@ -166,7 +176,8 @@ Numéro Chance: 4
 Analyse:
   Somme des numéros: 122
   Pairs: 3 | Impairs: 2
-  Bas (1-24): 2 | Hauts (25-49): 3
+  Bas (1-24): 3 | Hauts (25-49): 2
+  Tranches couvertes: 5 sur 5
   Numéros consécutifs: Non
 ```
 

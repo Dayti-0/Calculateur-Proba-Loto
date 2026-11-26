@@ -91,6 +91,7 @@ def exemple_4_analyse_grille():
     print(f"Numéros impairs: {analysis['odd_count']}")
     print(f"Numéros bas (1-24): {analysis['low_count']}")
     print(f"Numéros hauts (25-49): {analysis['high_count']}")
+    print(f"Tranches couvertes: {analysis['ranges_covered']} sur 5")
     print(f"Numéros consécutifs présents: {'Oui' if analysis['consecutive'] else 'Non'}")
 
     # Affichage formaté
@@ -173,12 +174,9 @@ def exemple_6_simulation():
             print("")
 
         # Afficher le rang si gagnant
-        if correct_nums >= 2 and correct_chance:
-            print(f"  🎉 GAGNANT - Rang 7 (2+ numéros + chance)")
-        elif correct_nums >= 3:
-            rang = 6 - (correct_nums - 3) * 2 + (0 if correct_chance else 1)
-            if rang <= 7:
-                print(f"  🎉 GAGNANT - Rang {rang}")
+        rang = calc.rank_for(correct_nums, correct_chance)
+        if rang is not None:
+            print(f"  🎉 GAGNANT - Rang {rang}")
 
 
 def main():
@@ -205,7 +203,8 @@ def main():
     print("\n\n" + "=" * 70)
     print("FIN DES EXEMPLES")
     print("=" * 70)
-    print("\nPour une utilisation interactive, lancez: python3 loto_cli.py")
+    print("\nPour une interface graphique, ouvrez le fichier interface.html")
+    print("Pour une utilisation en ligne de commande, lancez: python3 loto_cli.py")
     print("=" * 70 + "\n")
 
 
