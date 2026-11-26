@@ -1,9 +1,10 @@
 # Calculateur EuroMillions & Loto (FDJ)
 
-[![Tests](https://github.com/dayti-0/Calculateur-Proba-Loto/actions/workflows/tests.yml/badge.svg)](https://github.com/dayti-0/Calculateur-Proba-Loto/actions/workflows/tests.yml)
+[![Tests](https://github.com/dayti-0/Calculateur-Proba-Loto/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/dayti-0/Calculateur-Proba-Loto/actions/workflows/tests.yml)
 
 Outil en ligne de commande et bibliothèque Python, **centrés sur l'EuroMillions – My Million**,
-qui répondent avec des chiffres exacts et vérifiés aux questions que se pose un joueur :
+complétés par une page web autonome pour le Loto. Ils répondent avec des chiffres exacts et
+vérifiés aux questions que se pose un joueur :
 
 * Quelles sont mes chances réelles, rang par rang, avec ou sans Étoile+ ?
 * Que vaut une grille multiple, et que rapporte-t-elle selon le tirage ?
@@ -55,6 +56,19 @@ Ou installé comme commande `proba-loto` :
 ```bash
 python3 -m pip install .
 ```
+
+### Interface graphique (Loto)
+
+Ouvrez **`interface.html`** d'un double-clic : la page s'affiche dans le navigateur, sans rien
+installer, hors connexion et sur téléphone. Trois onglets :
+
+* **Générer** : grilles au hasard, équilibrées ou avec vos numéros favoris (1 à 20 grilles) ;
+* **Ma grille** : cochez 5 numéros et 1 N° Chance comme sur un bulletin, obtenez l'analyse de la
+  grille et comparez-la à un tirage ;
+* **Probabilités** : les 9 rangs du Loto et un calculateur pour n'importe quelle combinaison.
+
+La grille, les favoris et les réglages sont mémorisés par le navigateur. L'EuroMillions, lui, se
+pilote depuis la ligne de commande ci-dessous.
 
 ## Utilisation
 
@@ -280,6 +294,8 @@ menu. Elle tourne sous Python 3.10 à 3.14 via GitHub Actions. L'[audit](AUDIT.m
 corrections apportées à la première version.
 
 ```text
+interface.html        page web autonome pour le Loto
+exemples.py           exemples d'utilisation de la bibliothèque
 proba_loto/
 ├── jeux.py           règles officielles (EuroMillions, Étoile+, Loto)
 ├── probabilites.py   probabilités exactes

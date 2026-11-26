@@ -43,6 +43,12 @@ vérifié par une suite de 149 tests (Python 3.10 à 3.14, typage `mypy --strict
 Les anciens scripts `loto_calculator.py` et `loto_cli.py` sont remplacés par le package
 `proba_loto` (`python3 -m proba_loto`) ; `exemples.py` a été réécrit.
 
+**Fusion avec `main` (26/11/2026).** En parallèle, une autre session avait poussé sur `main` une
+interface graphique Loto (`interface.html`) et des correctifs de l'ancien code Loto (constats 1 à
+6 ci-dessus). L'interface, dont les formules et la détermination des rangs ont été vérifiées, est
+conservée et documentée. Les correctifs de l'ancien code étant tous couverts par `proba_loto`,
+les anciens scripts restent supprimés ; ils demeurent consultables dans l'historique git.
+
 ## Ce qui a été construit (EuroMillions en priorité)
 
 * **Règles officielles décrites comme des données** (`jeux.py`) : EuroMillions (13 rangs, parts

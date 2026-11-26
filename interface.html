@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculateur Proba Loto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : un bulletin de jeu. Une colonne d'application, des onglets sous l'en-tête, la grille à cocher au centre. */
+:root {
+  --paper: #F2F5FA;
+  --surface: #FFFFFF;
+  --ink: #15203A;
+  --muted: #5A6580;
+  --line: #D7DEEA;
+  --soft: #E7ECF5;
+  --accent: #D7263D;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #FCE9EC;
+  --chance: #F2B705;
+  --chance-hi: #FFF1B8;
+  --chance-shade: #C78F00;
+  --chance-ink: #2A1F00;
+  --chance-soft: #FFF6D8;
+  --chance-line: #EBD38A;
+  --ball: #FFFFFF;
+  --ball-hi: #FFFFFF;
+  --ball-shade: #CBD3E2;
+  --ball-ink: #15203A;
+  --good: #1D8457;
+  --good-soft: #E2F4EB;
+  --shadow: rgba(21, 32, 58, 0.16);
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1424;
+    --surface: #161F33;
+    --ink: #E7ECF6;
+    --muted: #9BA6BE;
+    --line: #2A3550;
+    --soft: #1E2841;
+    --accent: #FF5468;
+    --accent-ink: #1A0509;
+    --accent-soft: #3A1A25;
+    --chance: #F5C33B;
+    --chance-hi: #FFF0BF;
+    --chance-shade: #B88400;
+    --chance-ink: #241A00;
+    --chance-soft: #2F2913;
+    --chance-line: #5C4C1C;
+    --ball: #E9EEF7;
+    --ball-hi: #FFFFFF;
+    --ball-shade: #A9B4C9;
+    --ball-ink: #15203A;
+    --good: #4CC48F;
+    --good-soft: #15342A;
+    --shadow: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1424;
+  --surface: #161F33;
+  --ink: #E7ECF6;
+  --muted: #9BA6BE;
+  --line: #2A3550;
+  --soft: #1E2841;
+  --accent: #FF5468;
+  --accent-ink: #1A0509;
+  --accent-soft: #3A1A25;
+  --chance: #F5C33B;
+  --chance-hi: #FFF0BF;
+  --chance-shade: #B88400;
+  --chance-ink: #241A00;
+  --chance-soft: #2F2913;
+  --chance-line: #5C4C1C;
+  --ball: #E9EEF7;
+  --ball-hi: #FFFFFF;
+  --ball-shade: #A9B4C9;
+  --ball-ink: #15203A;
+  --good: #4CC48F;
+  --good-soft: #15342A;
+  --shadow: rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* En-tête */
+.top { display: grid; gap: 8px; padding-block: 28px 4px; }
+.eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 6vw, 40px); line-height: 1.02; letter-spacing: -0.015em; text-wrap: balance; }
+.rules { margin: 0; color: var(--muted); font-size: 14px; }
+.rules b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.2; text-wrap: balance; }
+h3 { margin: 0; font-size: 14px; font-weight: 600; }
+
+/* Onglets */
+.tabs { display: flex; gap: 4px; padding: 4px; margin-block: 18px 22px; background: var(--soft); border-radius: 999px; width: max-content; max-width: 100%; overflow-x: auto; }
+.tab { appearance: none; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; line-height: 1; padding: 11px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+
+/* Blocs */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; min-width: 0; }
+.stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.hint { margin: 0; color: var(--muted); font-size: 14px; max-width: 62ch; }
+.note { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--soft); color: var(--muted); font-size: 14px; max-width: 70ch; }
+.note b { color: var(--ink); }
+.label { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+
+/* Boutons */
+.btn { appearance: none; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 10px 16px; font-weight: 600; font-size: 14px; line-height: 1.2; cursor: pointer; }
+.btn:hover { border-color: var(--ink); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); padding: 12px 22px; font-size: 15px; }
+.btn-primary:hover { border-color: var(--accent); filter: brightness(1.06); }
+.btn-small { padding: 6px 11px; font-size: 13px; border-radius: 8px; }
+
+/* Choix à pastilles */
+.seg { display: flex; flex-wrap: wrap; gap: 6px; position: relative; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { border: 1.5px solid var(--line); background: var(--surface); padding: 9px 15px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 14px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.seg label:hover { border-color: var(--ink); }
+.seg input:checked + label { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
+legend { padding: 0; margin-bottom: 10px; }
+
+/* Compteur de grilles */
+.stepper { display: inline-flex; align-items: center; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.stepper button { appearance: none; border: 0; background: transparent; width: 40px; height: 42px; font-size: 20px; cursor: pointer; color: var(--ink); }
+.stepper button:hover { background: var(--soft); }
+.stepper input { width: 48px; height: 42px; border: 0; border-inline: 1.5px solid var(--line); background: transparent; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Boules */
+.balls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ball {
+  --size: 44px;
+  position: relative; flex: none;
+  width: var(--size); height: var(--size); border-radius: 50%;
+  display: grid; place-items: center;
+  font: 800 17px/1 var(--font-display); font-variant-numeric: tabular-nums;
+  color: var(--ball-ink);
+  background: radial-gradient(circle at 34% 28%, var(--ball-hi) 0 16%, var(--ball) 46%, var(--ball-shade) 100%);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+.ball.chance { color: var(--chance-ink); background: radial-gradient(circle at 34% 28%, var(--chance-hi) 0 16%, var(--chance) 50%, var(--chance-shade) 100%); }
+.ball.fav::after, .ball.hit::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--accent); }
+.ball.hit::after { border-color: var(--good); }
+.ball.miss { opacity: 0.4; box-shadow: none; }
+.plus { color: var(--muted); font-weight: 600; font-size: 18px; padding-inline: 2px; }
+
+/* Faits d'analyse */
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.facts li { background: var(--soft); border-radius: 7px; padding: 4px 9px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.facts b { color: var(--ink); font-weight: 600; }
+
+/* Onglet Générer */
+.gen-layout { display: grid; gap: 20px; }
+.controls { display: grid; gap: 20px; }
+.fav-zone { display: grid; gap: 10px; padding: 14px; border-radius: 12px; background: var(--soft); }
+.fav-zone .ticket-grid { max-width: 420px; }
+.results { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); }
+.grid-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.grid-card .actions { display: flex; gap: 6px; }
+
+/* Bulletin */
+.ticket-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.chance-cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; width: calc((100% - 36px) * 5 / 7 + 24px); }
+.cell {
+  appearance: none; position: relative; aspect-ratio: 1; max-width: 100%; min-width: 0;
+  border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface);
+  color: var(--ink); font-weight: 600; font-size: 15px; line-height: 1; font-variant-numeric: tabular-nums;
+  display: grid; place-items: center; padding: 0; cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.cell:hover { border-color: var(--ink); }
+.chance-cells .cell { background: var(--chance-soft); border-color: var(--chance-line); }
+.chance-cells .cell:hover { border-color: var(--chance-shade); }
+.cell[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 800; }
+.cell[aria-pressed="true"]::before, .cell[aria-pressed="true"]::after {
+  content: ""; position: absolute; left: 14%; right: 14%; top: calc(50% - 1px); height: 2px;
+  background: var(--accent); opacity: 0.8; border-radius: 2px; transform: rotate(42deg);
+  animation: stroke 0.16s ease-out both;
+}
+.cell[aria-pressed="true"]::after { transform: rotate(-47deg); animation-delay: 0.08s; }
+@keyframes stroke { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.is-full .cell:not([aria-pressed="true"]) { opacity: 0.38; }
+.fav-zone .cell { font-size: 13px; border-radius: 7px; }
+
+.ticket-layout { display: grid; gap: 16px; align-items: start; }
+.ticket { display: grid; gap: 14px; }
+.ticket-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.count { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px; color: var(--muted); }
+.count.done { color: var(--good); }
+.msg { margin: 0; font-size: 14px; color: var(--accent); }
+.msg:empty { position: absolute; }
+
+.analysis-list { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: 14px; }
+.analysis-list dt { color: var(--muted); }
+.analysis-list dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.analysis-list dd span { font-weight: 400; color: var(--muted); }
+.empty { margin: 0; color: var(--muted); font-size: 14px; }
+
+.draw-inputs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto minmax(0, 1fr); gap: 6px; align-items: center; }
+.draw-inputs input {
+  width: 100%; min-width: 0; height: 44px; border: 1.5px solid var(--line); border-radius: 10px;
+  background: var(--surface); text-align: center; font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.draw-inputs input::-webkit-outer-spin-button, .draw-inputs input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.draw-inputs input.chance-input { background: var(--chance-soft); border-color: var(--chance-line); }
+.draw-inputs input[aria-invalid="true"] { border-color: var(--accent); }
+.verdict { display: grid; gap: 10px; padding: 14px; border-radius: 12px; background: var(--soft); }
+.verdict.win { background: var(--good-soft); }
+.verdict p { margin: 0; font-size: 14px; }
+.verdict .headline { font-family: var(--font-display); font-weight: 600; font-size: 18px; }
+.verdict.win .headline { color: var(--good); }
+
+/* Onglet Probabilités */
+.stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.stat { display: grid; gap: 4px; }
+.stat .value { font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 5vw, 34px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat .value small { font-size: 0.55em; font-weight: 600; color: var(--muted); }
+.stat p { margin: 0; color: var(--muted); font-size: 14px; }
+.table-wrap { overflow-x: auto; margin-inline: -20px; padding-inline: 20px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: middle; }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+th:first-child, td:first-child { padding-left: 0; }
+th:last-child, td:last-child { padding-right: 0; }
+.num { text-align: right; }
+tfoot td { border-bottom: 0; font-weight: 600; }
+.rank-badge { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); font: 800 14px/1 var(--font-display); }
+.rank-1 .rank-badge { background: var(--chance); color: var(--chance-ink); }
+.combo { display: inline-flex; align-items: center; gap: 10px; }
+.pips { display: inline-flex; align-items: center; gap: 3px; }
+.pip { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); }
+.pip.on { background: var(--ink); border-color: var(--ink); }
+.pip.ch { margin-left: 5px; border-color: var(--chance-shade); }
+.pip.ch.on { background: var(--chance); border-color: var(--chance-shade); }
+.calc { display: grid; gap: 18px; }
+.calc-result { display: grid; gap: 8px; padding-top: 4px; }
+.calc-result .value { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 7vw, 44px); line-height: 1; font-variant-numeric: tabular-nums; }
+.calc-result .value small { font-size: 0.5em; font-weight: 600; color: var(--muted); }
+.calc-result p { margin: 0; font-size: 14px; max-width: 62ch; }
+.pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--soft); color: var(--muted); }
+.pill.win { background: var(--good-soft); color: var(--good); }
+
+footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
+footer p { margin: 0; max-width: 75ch; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 12px);
+  background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 6px 20px var(--shadow); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+  max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (min-width: 760px) {
+  .ticket-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .calc-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+}
+@media (max-width: 520px) {
+  .tabs { width: 100%; }
+  .tab { flex: 1; padding-inline: 8px; }
+}
+@media (max-width: 420px) {
+  .ball { --size: 38px; font-size: 15px; }
+  .balls { gap: 6px; }
+  .card { padding: 16px; }
+  .table-wrap { margin-inline: -16px; padding-inline: 16px; }
+  .cell { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Loto français</p>
+    <h1>Calculateur Proba Loto</h1>
+    <p class="rules"><b>5 numéros</b> parmi 49 · <b>1 numéro Chance</b> parmi 10 · <b>19&#8239;068&#8239;840</b> combinaisons possibles</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-generer" data-view="generer" aria-controls="panel-generer" aria-selected="true">Générer</button>
+    <button class="tab" role="tab" id="tab-ma-grille" data-view="ma-grille" aria-controls="panel-ma-grille" aria-selected="false" tabindex="-1">Ma grille</button>
+    <button class="tab" role="tab" id="tab-probabilites" data-view="probabilites" aria-controls="panel-probabilites" aria-selected="false" tabindex="-1">Probabilités</button>
+  </nav>
+
+  <!-- Générer -->
+  <section id="panel-generer" role="tabpanel" aria-labelledby="tab-generer" class="gen-layout">
+    <form class="card controls" id="gen-form" novalidate>
+      <fieldset>
+        <legend><h2>Comment choisir les numéros&#8239;?</h2></legend>
+        <div class="seg" role="radiogroup">
+          <input type="radio" name="strategy" id="s-random" value="random" checked><label for="s-random">Au hasard</label>
+          <input type="radio" name="strategy" id="s-balanced" value="balanced"><label for="s-balanced">Grille équilibrée</label>
+          <input type="radio" name="strategy" id="s-favorites" value="favorites"><label for="s-favorites">Avec mes numéros favoris</label>
+        </div>
+        <p class="hint" id="strategy-hint"></p>
+      </fieldset>
+
+      <div class="fav-zone" id="fav-zone" hidden>
+        <div class="ticket-head">
+          <h3>Touchez vos numéros favoris</h3>
+          <span class="count" id="fav-count">0 choisi</span>
+        </div>
+        <div class="ticket-grid" id="fav-grid" aria-label="Numéros favoris"></div>
+        <div class="row"><button type="button" class="btn btn-small" id="fav-clear">Effacer mes favoris</button></div>
+      </div>
+
+      <div class="row between">
+        <div class="row">
+          <label for="grid-count" class="label">Nombre de grilles</label>
+          <div class="stepper">
+            <button type="button" id="count-minus" aria-label="Une grille de moins">−</button>
+            <input type="number" id="grid-count" min="1" max="20" value="3" inputmode="numeric">
+            <button type="button" id="count-plus" aria-label="Une grille de plus">+</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="gen-btn">Générer</button>
+      </div>
+      <p class="msg" id="gen-msg" aria-live="polite"></p>
+    </form>
+
+    <div class="stack">
+      <div class="row between">
+        <h2 id="results-title">Vos grilles</h2>
+        <button type="button" class="btn btn-small" id="copy-all">Copier toutes les grilles</button>
+      </div>
+      <ol class="results" id="results"></ol>
+      <p class="note">Ces méthodes changent l'allure de la grille, <b>pas vos chances</b>&#8239;: chaque combinaison a exactement 1 chance sur 19&#8239;068&#8239;840 de sortir au tirage.</p>
+    </div>
+  </section>
+
+  <!-- Ma grille -->
+  <section id="panel-ma-grille" role="tabpanel" aria-labelledby="tab-ma-grille" hidden>
+    <div class="ticket-layout">
+      <div class="card ticket">
+        <div class="ticket-head">
+          <h2>Cochez 5 numéros</h2>
+          <span class="count" id="num-count">0 / 5</span>
+        </div>
+        <div class="ticket-grid" id="ticket-numbers" aria-label="Numéros de 1 à 49"></div>
+        <div class="ticket-head">
+          <h3>Et 1 numéro Chance</h3>
+          <span class="count" id="chance-count">0 / 1</span>
+        </div>
+        <div class="chance-cells" id="ticket-chance" aria-label="Numéro Chance de 1 à 10"></div>
+        <div class="row">
+          <button type="button" class="btn" id="ticket-random">Remplir au hasard</button>
+          <button type="button" class="btn" id="ticket-clear">Tout effacer</button>
+        </div>
+        <p class="msg" id="ticket-msg" aria-live="polite"></p>
+      </div>
+
+      <div class="stack">
+        <div class="card stack" id="analysis-card">
+          <h2>Analyse de la grille</h2>
+          <div id="analysis"></div>
+        </div>
+        <div class="card stack" id="check-card">
+          <h2>Comparer à un tirage</h2>
+          <p class="hint">Saisissez les numéros sortis au tirage pour savoir ce que votre grille aurait gagné.</p>
+          <div class="draw-inputs" id="draw-inputs">
+            <label class="sr-only" for="draw-1">1er numéro du tirage</label><input type="number" id="draw-1" min="1" max="49" inputmode="numeric" placeholder="–">
+            <label class="sr-only" for="draw-2">2e numéro du tirage</label><input type="number" id="draw-2" min="1" max="49" inputmode="numeric" placeholder="–">
+            <label class="sr-only" for="draw-3">3e numéro du tirage</label><input type="number" id="draw-3" min="1" max="49" inputmode="numeric" placeholder="–">
+            <label class="sr-only" for="draw-4">4e numéro du tirage</label><input type="number" id="draw-4" min="1" max="49" inputmode="numeric" placeholder="–">
+            <label class="sr-only" for="draw-5">5e numéro du tirage</label><input type="number" id="draw-5" min="1" max="49" inputmode="numeric" placeholder="–">
+            <span class="plus" aria-hidden="true">+</span>
+            <label class="sr-only" for="draw-chance">Numéro Chance du tirage</label><input type="number" id="draw-chance" class="chance-input" min="1" max="10" inputmode="numeric" placeholder="C">
+          </div>
+          <div class="row">
+            <button type="button" class="btn btn-small" id="draw-random">Simuler un tirage au hasard</button>
+            <button type="button" class="btn btn-small" id="draw-clear">Effacer le tirage</button>
+          </div>
+          <div id="check-result" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Probabilités -->
+  <section id="panel-probabilites" role="tabpanel" aria-labelledby="tab-probabilites" class="stack" hidden>
+    <div class="stats">
+      <div class="card stat">
+        <span class="label">Gagner le jackpot</span>
+        <span class="value"><small>1 sur</small> 19&#8239;068&#8239;840</span>
+        <p>5 bons numéros et le bon numéro Chance.</p>
+      </div>
+      <div class="card stat">
+        <span class="label">Gagner quelque chose</span>
+        <span class="value" id="any-win"></span>
+        <p>Au moins le rang 9, avec n'importe quelle grille.</p>
+      </div>
+    </div>
+
+    <div class="calc-layout stack">
+      <div class="card stack">
+        <h2>Les 9 rangs de gain</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Rang</th><th scope="col">Il faut trouver</th><th scope="col" class="num">Chances</th><th scope="col" class="num">Probabilité</th></tr>
+            </thead>
+            <tbody id="rank-rows"></tbody>
+            <tfoot><tr><td></td><td>Au moins un rang</td><td class="num" id="any-odds"></td><td class="num" id="any-pct"></td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <form class="card calc" id="calc-form" novalidate>
+        <h2>Calculer une combinaison</h2>
+        <fieldset>
+          <legend class="label">Bons numéros trouvés</legend>
+          <div class="seg" id="calc-k"></div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Numéro Chance</legend>
+          <div class="seg">
+            <input type="radio" name="calc-chance" id="c-yes" value="yes" checked><label for="c-yes">Trouvé</label>
+            <input type="radio" name="calc-chance" id="c-no" value="no"><label for="c-no">Pas trouvé</label>
+          </div>
+        </fieldset>
+        <div class="calc-result" id="calc-result" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <p>Outil indépendant, sans lien avec la Française des Jeux. Les calculs suivent les règles du Loto&#8239;: 5 numéros sur 49 et 1 numéro Chance sur 10, 3 tirages par semaine.</p>
+    <p>Le jeu doit rester un plaisir. Joueurs Info Service&#8239;: 09&#8239;74&#8239;75&#8239;13&#8239;13 (appel non surtaxé).</p>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Mathématiques ---------- */
+  const NUMBERS = 49, PICK = 5, CHANCES = 10, DRAWS_PER_YEAR = 156;
+  function comb(n, k) {
+    if (k < 0 || k > n) return 0;
+    let r = 1;
+    for (let i = 1; i <= k; i++) r = r * (n - k + i) / i;
+    return Math.round(r);
+  }
+  const TOTAL = comb(NUMBERS, PICK) * CHANCES; // 19 068 840
+  // Nombre de combinaisons avec exactement k bons numéros, Chance trouvé ou non
+  const ways = (k, chance) => comb(PICK, k) * comb(NUMBERS - PICK, PICK - k) * (chance ? 1 : CHANCES - 1);
+
+  const RANGS = [
+    { rang: 1, k: 5, chance: true,  label: '5 numéros + Chance', combos: [[5, true]] },
+    { rang: 2, k: 5, chance: false, label: '5 numéros', combos: [[5, false]] },
+    { rang: 3, k: 4, chance: true,  label: '4 numéros + Chance', combos: [[4, true]] },
+    { rang: 4, k: 4, chance: false, label: '4 numéros', combos: [[4, false]] },
+    { rang: 5, k: 3, chance: true,  label: '3 numéros + Chance', combos: [[3, true]] },
+    { rang: 6, k: 3, chance: false, label: '3 numéros', combos: [[3, false]] },
+    { rang: 7, k: 2, chance: true,  label: '2 numéros + Chance', combos: [[2, true]] },
+    { rang: 8, k: 2, chance: false, label: '2 numéros', combos: [[2, false]] },
+    { rang: 9, k: 0, chance: true,  label: '0 ou 1 numéro + Chance', combos: [[1, true], [0, true]] },
+  ];
+  RANGS.forEach(r => { r.ways = r.combos.reduce((s, [k, c]) => s + ways(k, c), 0); });
+  const ANY_WIN = RANGS.reduce((s, r) => s + r.ways, 0);
+
+  function rankOf(k, chance) {
+    if (k >= 2) return (5 - k) * 2 + (chance ? 1 : 2);
+    return chance ? 9 : null;
+  }
+
+  /* ---------- Mise en forme ---------- */
+  const NB = ' ';
+  const fmtInt = n => n.toLocaleString('fr-FR');
+  const pad = n => String(n).padStart(2, '0');
+  function oddsText(p) {
+    const x = 1 / p;
+    return x >= 100 ? fmtInt(Math.round(x)) : x.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+  }
+  const pctText = p => (p * 100).toLocaleString('fr-FR', { maximumSignificantDigits: 3 }) + NB + '%';
+  function waitText(p) {
+    const draws = 1 / p;
+    const weeks = draws / 3;
+    const years = draws / DRAWS_PER_YEAR;
+    if (weeks < 2) return `une fois tous les ${Math.round(draws)} tirages`;
+    if (weeks < 9) return `une fois toutes les ${Math.round(weeks)} semaines`;
+    if (years < 2) return `une fois tous les ${Math.round(years * 12)} mois`;
+    return `une fois tous les ${fmtInt(Math.round(years))} ans`;
+  }
+  const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
+  const goodNums = k => k > 1 ? `${k} bons numéros` : `${k} bon numéro`;
+
+  /* ---------- Hasard ---------- */
+  function randInt(min, max) {
+    const range = max - min + 1;
+    if (window.crypto && crypto.getRandomValues) {
+      const buf = new Uint32Array(1);
+      const limit = Math.floor(0x100000000 / range) * range;
+      let x;
+      do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+      return min + (x % range);
+    }
+    return min + Math.floor(Math.random() * range);
+  }
+  function sample(pool, k) {
+    const a = pool.slice();
+    for (let i = 0; i < k; i++) {
+      const j = randInt(i, a.length - 1);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0, k);
+  }
+  const byNum = (a, b) => a - b;
+  const ALL_NUMS = Array.from({ length: NUMBERS }, (_, i) => i + 1);
+
+  /* ---------- Analyse et génération ---------- */
+  const tranche = n => Math.min(Math.floor((n - 1) / 10), 4); // 1-10, 11-20, 21-30, 31-40, 41-49
+  function analyze(nums) {
+    const even = nums.filter(n => n % 2 === 0).length;
+    const low = nums.filter(n => n <= 24).length;
+    const consec = [];
+    for (let i = 0; i < nums.length - 1; i++) if (nums[i + 1] - nums[i] === 1) consec.push(`${nums[i]}-${nums[i + 1]}`);
+    return {
+      sum: nums.reduce((a, b) => a + b, 0),
+      even, odd: nums.length - even,
+      low, high: nums.length - low,
+      tranches: new Set(nums.map(tranche)).size,
+      consec,
+    };
+  }
+  const randomGrid = () => ({ numbers: sample(ALL_NUMS, PICK).sort(byNum), chance: randInt(1, CHANCES) });
+  function balancedGrid() {
+    for (let i = 0; i < 5000; i++) {
+      const g = randomGrid();
+      const a = analyze(g.numbers);
+      if (a.even >= 2 && a.even <= 3 && a.low >= 2 && a.low <= 3 && a.tranches >= 3) return g;
+    }
+    return randomGrid();
+  }
+  function favoritesGrid(favs) {
+    const k = randInt(Math.min(2, favs.length), Math.min(3, favs.length));
+    const chosen = sample(favs, k);
+    const rest = sample(ALL_NUMS.filter(n => !chosen.includes(n)), PICK - k);
+    return { numbers: chosen.concat(rest).sort(byNum), chance: randInt(1, CHANCES) };
+  }
+  const gridText = g => `${g.numbers.map(pad).join(' - ')} | Chance ${g.chance}`;
+
+  const STRATEGIES = {
+    random:    { title: 'au hasard', hint: '5 numéros et un numéro Chance tirés entièrement au hasard.' },
+    balanced:  { title: 'équilibrées', hint: 'Au hasard, mais avec 2 ou 3 numéros pairs, 2 ou 3 numéros entre 1 et 24, et des numéros pris dans au moins 3 dizaines différentes.' },
+    favorites: { title: 'avec vos favoris', hint: 'Chaque grille reprend 2 ou 3 de vos numéros favoris (entourés en rouge), complétés au hasard.' },
+  };
+
+  /* ---------- Mémoire du navigateur ---------- */
+  const store = {
+    get(key, fallback) {
+      try { const v = localStorage.getItem('loto:' + key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
+    },
+    set(key, value) {
+      try { localStorage.setItem('loto:' + key, JSON.stringify(value)); } catch (e) { /* stockage indisponible */ }
+    },
+  };
+
+  /* ---------- Outils d'affichage ---------- */
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  function ballsHTML(numbers, chance, o = {}) {
+    const balls = numbers.map(n => {
+      const cls = ['ball'];
+      if (o.favs && o.favs.has(n)) cls.push('fav');
+      if (o.hits) cls.push(o.hits.has(n) ? 'hit' : 'miss');
+      return `<span class="${cls.join(' ')}">${pad(n)}</span>`;
+    }).join('');
+    let ch = '';
+    if (chance != null) {
+      const cls = ['ball', 'chance'];
+      if (o.hits) cls.push(o.chanceHit ? 'hit' : 'miss');
+      ch = `<span class="plus" aria-hidden="true">+</span><span class="sr-only">Chance</span><span class="${cls.join(' ')}">${chance}</span>`;
+    }
+    return `<div class="balls">${balls}${ch}</div>`;
+  }
+  function factsHTML(a) {
+    return `<ul class="facts">
+      <li>Somme <b>${a.sum}</b></li>
+      <li><b>${a.even}</b> pairs · <b>${a.odd}</b> impairs</li>
+      <li><b>${a.low}</b> bas · <b>${a.high}</b> hauts</li>
+      <li>Consécutifs <b>${a.consec.length ? a.consec.join(', ') : 'non'}</b></li>
+    </ul>`;
+  }
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  function copyText(text) {
+    const fallback = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch (e) { return false; }
+    };
+    const done = ok => toast(ok ? 'Copié dans le presse-papiers' : 'Copie impossible ici : notez les numéros à la main');
+    try {
+      navigator.clipboard.writeText(text).then(() => done(true), () => done(fallback()));
+    } catch (e) { done(fallback()); }
+  }
+
+  /* ---------- Onglets ---------- */
+  const VIEWS = ['generer', 'ma-grille', 'probabilites'];
+  function showView(name) {
+    if (!VIEWS.includes(name)) name = 'generer';
+    $$('.tab').forEach(t => {
+      const on = t.dataset.view === name;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    $$('[role="tabpanel"]').forEach(p => { p.hidden = p.id !== 'panel-' + name; });
+  }
+  function goTo(name) {
+    showView(name);
+    if (location.hash !== '#' + name) location.hash = name;
+  }
+  $$('.tab').forEach((t, i, tabs) => {
+    t.addEventListener('click', () => goTo(t.dataset.view));
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus(); goTo(next.dataset.view);
+    });
+  });
+  window.addEventListener('hashchange', () => showView(location.hash.slice(1)));
+
+  /* ---------- Onglet Générer ---------- */
+  const gen = {
+    strategy: store.get('strategy', 'random'),
+    count: store.get('count', 3),
+    favorites: new Set(store.get('favorites', [])),
+    grids: [],
+    usedFavs: new Set(),
+  };
+  if (!STRATEGIES[gen.strategy]) gen.strategy = 'random';
+
+  const favGrid = $('#fav-grid');
+  favGrid.innerHTML = ALL_NUMS.map(n => `<button type="button" class="cell" data-n="${n}" aria-pressed="false" aria-label="Favori ${n}">${n}</button>`).join('');
+
+  function renderStrategy() {
+    $(`input[name="strategy"][value="${gen.strategy}"]`).checked = true;
+    $('#strategy-hint').textContent = STRATEGIES[gen.strategy].hint;
+    $('#fav-zone').hidden = gen.strategy !== 'favorites';
+    $$('.cell', favGrid).forEach(c => c.setAttribute('aria-pressed', String(gen.favorites.has(+c.dataset.n))));
+    const n = gen.favorites.size;
+    $('#fav-count').textContent = n === 0 ? 'Aucun choisi' : plural(n, 'choisi', 'choisis');
+  }
+  function setCount(v) {
+    gen.count = Math.max(1, Math.min(20, Math.round(+v) || 1));
+    $('#grid-count').value = gen.count;
+    store.set('count', gen.count);
+  }
+  function generate() {
+    const msg = $('#gen-msg');
+    msg.textContent = '';
+    let maker;
+    if (gen.strategy === 'balanced') maker = balancedGrid;
+    else if (gen.strategy === 'favorites') {
+      if (gen.favorites.size === 0) { msg.textContent = 'Touchez au moins un numéro favori dans la grille ci-dessus.'; return; }
+      const favs = Array.from(gen.favorites);
+      maker = () => favoritesGrid(favs);
+    } else maker = randomGrid;
+    gen.grids = Array.from({ length: gen.count }, maker);
+    gen.usedFavs = gen.strategy === 'favorites' ? new Set(gen.favorites) : new Set();
+    renderResults();
+  }
+  function renderResults() {
+    const s = STRATEGIES[gen.strategy];
+    $('#results-title').textContent = `${plural(gen.grids.length, 'grille', 'grilles')} ${s.title}`;
+    $('#results').innerHTML = gen.grids.map((g, i) => `
+      <li class="grid-card">
+        <div class="row between">
+          <span class="label">Grille ${i + 1}</span>
+          <div class="actions">
+            <button type="button" class="btn btn-small" data-action="copy" data-i="${i}">Copier</button>
+            <button type="button" class="btn btn-small" data-action="check" data-i="${i}" title="Ouvrir cette grille dans l'onglet Ma grille">Vérifier</button>
+          </div>
+        </div>
+        ${ballsHTML(g.numbers, g.chance, { favs: gen.usedFavs })}
+        ${factsHTML(analyze(g.numbers))}
+      </li>`).join('');
+  }
+
+  $('#gen-form').addEventListener('change', e => {
+    if (e.target.name === 'strategy') {
+      gen.strategy = e.target.value;
+      store.set('strategy', gen.strategy);
+      $('#gen-msg').textContent = '';
+      renderStrategy();
+    }
+  });
+  $('#gen-form').addEventListener('submit', e => { e.preventDefault(); generate(); });
+  favGrid.addEventListener('click', e => {
+    const c = e.target.closest('.cell'); if (!c) return;
+    const n = +c.dataset.n;
+    if (gen.favorites.has(n)) gen.favorites.delete(n); else gen.favorites.add(n);
+    store.set('favorites', Array.from(gen.favorites).sort(byNum));
+    $('#gen-msg').textContent = '';
+    renderStrategy();
+  });
+  $('#fav-clear').addEventListener('click', () => { gen.favorites.clear(); store.set('favorites', []); renderStrategy(); });
+  $('#count-minus').addEventListener('click', () => setCount(gen.count - 1));
+  $('#count-plus').addEventListener('click', () => setCount(gen.count + 1));
+  $('#grid-count').addEventListener('change', e => setCount(e.target.value));
+  $('#copy-all').addEventListener('click', () => {
+    if (!gen.grids.length) return;
+    copyText(gen.grids.map((g, i) => `Grille ${i + 1} : ${gridText(g)}`).join('\n'));
+  });
+  $('#results').addEventListener('click', e => {
+    const b = e.target.closest('button[data-action]'); if (!b) return;
+    const g = gen.grids[+b.dataset.i]; if (!g) return;
+    if (b.dataset.action === 'copy') copyText(gridText(g));
+    else {
+      ticket.numbers = new Set(g.numbers);
+      ticket.chance = g.chance;
+      renderTicket();
+      goTo('ma-grille');
+      $('#check-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      $('#draw-1').focus({ preventScroll: true });
+    }
+  });
+
+  /* ---------- Onglet Ma grille ---------- */
+  const saved = store.get('ticket', { numbers: [], chance: null });
+  const ticket = {
+    numbers: new Set((saved.numbers || []).filter(n => n >= 1 && n <= NUMBERS).slice(0, PICK)),
+    chance: saved.chance >= 1 && saved.chance <= CHANCES ? saved.chance : null,
+  };
+  const tNums = $('#ticket-numbers');
+  const tChance = $('#ticket-chance');
+  tNums.innerHTML = ALL_NUMS.map(n => `<button type="button" class="cell" data-n="${n}" aria-pressed="false" aria-label="Numéro ${n}">${n}</button>`).join('');
+  tChance.innerHTML = Array.from({ length: CHANCES }, (_, i) => `<button type="button" class="cell" data-c="${i + 1}" aria-pressed="false" aria-label="Numéro Chance ${i + 1}">${i + 1}</button>`).join('');
+
+  const ticketNumbers = () => Array.from(ticket.numbers).sort(byNum);
+  const ticketComplete = () => ticket.numbers.size === PICK && ticket.chance != null;
+
+  function renderTicket() {
+    $$('.cell', tNums).forEach(c => c.setAttribute('aria-pressed', String(ticket.numbers.has(+c.dataset.n))));
+    $$('.cell', tChance).forEach(c => c.setAttribute('aria-pressed', String(ticket.chance === +c.dataset.c)));
+    tNums.classList.toggle('is-full', ticket.numbers.size === PICK);
+    tChance.classList.toggle('is-full', ticket.chance != null);
+    const nc = $('#num-count');
+    nc.textContent = `${ticket.numbers.size} / ${PICK}`;
+    nc.classList.toggle('done', ticket.numbers.size === PICK);
+    const cc = $('#chance-count');
+    cc.textContent = `${ticket.chance == null ? 0 : 1} / 1`;
+    cc.classList.toggle('done', ticket.chance != null);
+    store.set('ticket', { numbers: ticketNumbers(), chance: ticket.chance });
+    renderAnalysis();
+    renderCheck();
+  }
+
+  function renderAnalysis() {
+    const box = $('#analysis');
+    const missing = PICK - ticket.numbers.size;
+    if (!ticketComplete()) {
+      const parts = [];
+      if (missing > 0) parts.push(missing === PICK ? '5 numéros' : `encore ${plural(missing, 'numéro', 'numéros')}`);
+      if (ticket.chance == null) parts.push('le numéro Chance');
+      box.innerHTML = `<p class="empty">Cochez ${parts.join(' et ')} pour voir l'analyse, ou touchez «&#8239;Remplir au hasard&#8239;».</p>`;
+      return;
+    }
+    const nums = ticketNumbers();
+    const a = analyze(nums);
+    box.innerHTML = `
+      <div class="stack">
+        ${ballsHTML(nums, ticket.chance)}
+        <dl class="analysis-list">
+          <dt>Somme des numéros</dt><dd>${a.sum} <span>(une grille fait 125 en moyenne)</span></dd>
+          <dt>Pairs / impairs</dt><dd>${a.even} / ${a.odd}</dd>
+          <dt>Bas (1–24) / hauts (25–49)</dt><dd>${a.low} / ${a.high}</dd>
+          <dt>Dizaines couvertes</dt><dd>${a.tranches} sur 5</dd>
+          <dt>Numéros consécutifs</dt><dd>${a.consec.length ? 'Oui : ' + a.consec.join(', ') : 'Non'}</dd>
+          <dt>Chance de jackpot</dt><dd>1 sur 19${NB}068${NB}840 <span>(comme toute grille)</span></dd>
+        </dl>
+        <div class="row"><button type="button" class="btn btn-small" id="copy-ticket">Copier ma grille</button></div>
+      </div>`;
+    $('#copy-ticket').addEventListener('click', () => copyText(gridText({ numbers: nums, chance: ticket.chance })));
+  }
+
+  tNums.addEventListener('click', e => {
+    const c = e.target.closest('.cell'); if (!c) return;
+    const n = +c.dataset.n;
+    const msg = $('#ticket-msg');
+    msg.textContent = '';
+    if (ticket.numbers.has(n)) ticket.numbers.delete(n);
+    else if (ticket.numbers.size >= PICK) { msg.textContent = 'Vous avez déjà 5 numéros. Décochez-en un pour en choisir un autre.'; return; }
+    else ticket.numbers.add(n);
+    renderTicket();
+  });
+  tChance.addEventListener('click', e => {
+    const c = e.target.closest('.cell'); if (!c) return;
+    const n = +c.dataset.c;
+    $('#ticket-msg').textContent = '';
+    ticket.chance = ticket.chance === n ? null : n;
+    renderTicket();
+  });
+  $('#ticket-random').addEventListener('click', () => {
+    const g = randomGrid();
+    ticket.numbers = new Set(g.numbers); ticket.chance = g.chance;
+    $('#ticket-msg').textContent = '';
+    renderTicket();
+  });
+  $('#ticket-clear').addEventListener('click', () => {
+    ticket.numbers.clear(); ticket.chance = null;
+    $('#ticket-msg').textContent = '';
+    renderTicket();
+  });
+
+  /* Comparer à un tirage */
+  const drawInputs = [1, 2, 3, 4, 5].map(i => $('#draw-' + i));
+  const drawChance = $('#draw-chance');
+  function readDraw() {
+    const raw = drawInputs.map(i => i.value.trim());
+    const rawC = drawChance.value.trim();
+    const errors = [];
+    [...drawInputs, drawChance].forEach(i => i.removeAttribute('aria-invalid'));
+    if (raw.some(v => v === '') || rawC === '') return { incomplete: true };
+    const nums = raw.map(Number);
+    nums.forEach((n, i) => {
+      if (!Number.isInteger(n) || n < 1 || n > NUMBERS) { drawInputs[i].setAttribute('aria-invalid', 'true'); errors.push('Les numéros du tirage vont de 1 à 49.'); }
+    });
+    const seen = new Map();
+    nums.forEach((n, i) => {
+      if (seen.has(n)) { drawInputs[i].setAttribute('aria-invalid', 'true'); errors.push(`Le ${n} apparaît deux fois dans le tirage.`); }
+      seen.set(n, i);
+    });
+    const c = Number(rawC);
+    if (!Number.isInteger(c) || c < 1 || c > CHANCES) { drawChance.setAttribute('aria-invalid', 'true'); errors.push('Le numéro Chance va de 1 à 10.'); }
+    return { nums, chance: c, error: errors[0] };
+  }
+  function renderCheck() {
+    const box = $('#check-result');
+    const d = readDraw();
+    if (d.incomplete) { box.innerHTML = ''; return; }
+    if (d.error) { box.innerHTML = `<p class="msg">${d.error}</p>`; return; }
+    if (!ticketComplete()) { box.innerHTML = `<p class="empty">Complétez d'abord votre grille à gauche (5 numéros et 1 numéro Chance).</p>`; return; }
+    const drawSet = new Set(d.nums);
+    const nums = ticketNumbers();
+    const hits = new Set(nums.filter(n => drawSet.has(n)));
+    const k = hits.size;
+    const chanceHit = ticket.chance === d.chance;
+    const rank = rankOf(k, chanceHit);
+    const r = RANGS.find(x => x.rang === rank);
+    box.innerHTML = `
+      <div class="verdict ${rank ? 'win' : ''}">
+        ${ballsHTML(nums, ticket.chance, { hits, chanceHit })}
+        <p class="headline">${rank ? `Gagné : rang ${rank}` : 'Pas de gain cette fois'}</p>
+        <p>${goodNums(k)}${chanceHit ? ' et le bon numéro Chance' : ', numéro Chance manqué'}.
+        ${rank ? `Ce résultat arrive 1 fois sur ${oddsText(r.ways / TOTAL)}.` : 'Il faut au moins 2 bons numéros, ou le bon numéro Chance.'}</p>
+      </div>`;
+  }
+  [...drawInputs, drawChance].forEach(i => i.addEventListener('input', renderCheck));
+  $('#draw-random').addEventListener('click', () => {
+    const g = randomGrid();
+    drawInputs.forEach((inp, i) => { inp.value = g.numbers[i]; });
+    drawChance.value = g.chance;
+    renderCheck();
+  });
+  $('#draw-clear').addEventListener('click', () => {
+    [...drawInputs, drawChance].forEach(i => { i.value = ''; });
+    renderCheck();
+  });
+
+  /* ---------- Onglet Probabilités ---------- */
+  function pipsHTML(k, chance) {
+    let s = '';
+    for (let i = 0; i < PICK; i++) s += `<span class="pip${i < k ? ' on' : ''}"></span>`;
+    s += `<span class="pip ch${chance ? ' on' : ''}"></span>`;
+    return `<span class="pips" aria-hidden="true">${s}</span>`;
+  }
+  $('#rank-rows').innerHTML = RANGS.map(r => {
+    const p = r.ways / TOTAL;
+    return `<tr class="rank-${r.rang}">
+      <td><span class="rank-badge">${r.rang}</span></td>
+      <td><span class="combo">${pipsHTML(r.k, r.chance)}<span>${r.label}</span></span></td>
+      <td class="num">1 sur ${oddsText(p)}</td>
+      <td class="num">${pctText(p)}</td>
+    </tr>`;
+  }).join('');
+  const pAny = ANY_WIN / TOTAL;
+  $('#any-odds').textContent = `1 sur ${oddsText(pAny)}`;
+  $('#any-pct').textContent = pctText(pAny);
+  $('#any-win').innerHTML = `<small>1 sur</small> ${oddsText(pAny)}`;
+
+  $('#calc-k').innerHTML = [0, 1, 2, 3, 4, 5].map(k =>
+    `<input type="radio" name="calc-k" id="k-${k}" value="${k}"${k === 3 ? ' checked' : ''}><label for="k-${k}">${k}</label>`).join('');
+
+  function renderCalc() {
+    const k = +$('input[name="calc-k"]:checked').value;
+    const chance = $('input[name="calc-chance"]:checked').value === 'yes';
+    const w = ways(k, chance);
+    const p = w / TOTAL;
+    const rank = rankOf(k, chance);
+    const rankNote = rank === 9 ? ' (le rang 9 regroupe 0 ou 1 bon numéro + Chance)' : '';
+    $('#calc-result').innerHTML = `
+      <div class="row"><span class="pill ${rank ? 'win' : ''}">${rank ? `Rang ${rank}${rankNote}` : 'Aucun gain'}</span></div>
+      <div class="value"><small>1 sur</small> ${oddsText(p)}</div>
+      <p>Probabilité d'avoir exactement ${goodNums(k)} ${chance ? 'avec' : 'sans'} le numéro Chance : ${pctText(p)}, soit ${fmtInt(w)} ${w > 1 ? 'combinaisons' : 'combinaison'} sur ${fmtInt(TOTAL)}.</p>
+      ${rank ? `<p>En jouant une grille à chaque tirage (3 par semaine), cela arrive en moyenne ${waitText(p)}.</p>` : ''}`;
+  }
+  $('#calc-form').addEventListener('change', renderCalc);
+  $('#calc-form').addEventListener('submit', e => e.preventDefault());
+
+  /* ---------- Démarrage ---------- */
+  setCount(gen.count);
+  renderStrategy();
+  if (gen.strategy === 'favorites' && gen.favorites.size === 0) { gen.strategy = 'random'; renderStrategy(); }
+  generate();
+  renderTicket();
+  renderCalc();
+  showView(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>
