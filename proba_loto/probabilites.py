@@ -1,7 +1,7 @@
 """Probabilités exactes (en fractions rationnelles) des rangs de gain.
 
 Le nombre de combinaisons simples ayant exactement ``a`` bons numéros et ``b``
-bons numéros complémentaires (étoiles, N° Chance) suit une loi
+bonnes étoiles suit une loi
 hypergéométrique double :
 
     C(k, a) × C(n − k, k − a) × C(j, b) × C(m − j, j − b)
@@ -114,12 +114,7 @@ def gain_moyen_theorique(jeu: Jeu, rang: Rang, table: Optional[TableDeGains] = N
     Retourne ``None`` pour le jackpot (montant variable) ou si la part est inconnue.
     """
     table = table or jeu.gains
-    if rang.gain_fixe is not None:
-        return float(rang.gain_fixe)
     if rang.part is None or (table is jeu.gains and rang.numero == 1):
-        return None
-    if jeu.cle != "euromillions":
-        # Les parts du Loto portent sur un reliquat variable : pas de formule simple.
         return None
     return float(table.masse_par_grille * rang.part / probabilite_rang(jeu, rang))
 

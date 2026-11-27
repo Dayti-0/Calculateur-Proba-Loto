@@ -19,6 +19,7 @@ from .analyse import analyser_grille, bornes_somme
 from .esperance import SITUATIONS, calculer_esperance, jackpot_rentable
 from .generateur import STRATEGIES, Generateur
 from .grilles import ErreurGrille, Grille, verifier
+from .interface import ecrire_interface, ouvrir_interface
 from .historique import (
     DONNEES_EMBARQUEES,
     ErreurHistorique,
@@ -31,10 +32,8 @@ from .jeux import (
     EM_PLAFOND_JACKPOT,
     ETOILE_PLUS,
     EUROMILLIONS,
-    JEUX,
     Jeu,
     TableDeGains,
-    obtenir_jeu,
 )
 from .multiples import analyser_multiple, cout_multiple
 from .popularite import ModelePopularite, estimer_popularite
@@ -115,12 +114,6 @@ class Contexte:
             self._modele = estimer_popularite(historique)
         return self._modele
 
-    def exiger_euromillions(self, fonction: str) -> None:
-        if self.jeu is not EUROMILLIONS:
-            raise ErreurUtilisateur(
-                f"fonction réservée à l'EuroMillions ({fonction}) : l'historique officiel et la "
-                "répartition des gains utilisés par cet outil concernent ce jeu."
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -201,16 +194,15 @@ def cmd_probas(args: argparse.Namespace, ctx: Contexte) -> None:
     jeu = ctx.jeu
     tables = [jeu.gains]
     if args.etoile_plus:
-        ctx.exiger_euromillions("option Étoile+")
         tables.append(ETOILE_PLUS)
     total = nb_combinaisons(jeu)
     ctx.ecrire(f"{jeu.nom} : probabilités exactes pour une grille simple ({fmt.euros(jeu.prix_grille)})")
     ctx.ecrire(
         f"{fmt.entier(total)} combinaisons possibles : {jeu.numeros_par_grille} numéros parmi "
-        f"{jeu.numeros_max} et {jeu.bonus_par_grille} {jeu.bonus_nom if jeu.bonus_par_grille == 1 else jeu.bonus_nom_pluriel} "
+        f"{jeu.numeros_max} et {jeu.bonus_par_grille} {jeu.bonus_nom_pluriel} "
         f"parmi {jeu.bonus_max}"
     )
-    avec_gain = jeu is EUROMILLIONS
+    avec_gain = True
     for table in tables:
         ctx.ecrire()
         if table is not jeu.gains:
@@ -251,8 +243,8 @@ def cmd_generer(args: argparse.Namespace, ctx: Contexte) -> None:
     jeu = ctx.jeu
     if args.nombre < 1 or args.nombre > 1000:
         raise ErreurUtilisateur("le nombre de grilles doit être compris entre 1 et 1000")
-    modele = ctx.modele() if jeu is EUROMILLIONS else None
-    historique = ctx.historique_si_disponible() if jeu is EUROMILLIONS else None
+    modele = ctx.modele()
+    historique = ctx.historique_si_disponible()
     dernier = historique[-1].combinaison if historique else None
     generateur = Generateur(jeu, graine=args.graine, modele=modele, dernier_tirage=dernier)
     try:
@@ -292,15 +284,12 @@ def _texte_gains(gains: Dict[int, int]) -> str:
 
 def cmd_verifier(args: argparse.Namespace, ctx: Contexte) -> None:
     jeu = ctx.jeu
-    if args.etoile_plus:
-        ctx.exiger_euromillions("option Étoile+")
     grille = lire_grille(ctx, args.grille)
     tirage_historique: Optional[TirageHistorique] = None
     if args.tirage:
         tirage = lire_grille(ctx, args.tirage, multiple=False)
         ctx.ecrire(f"Tirage saisi : {tirage}")
     else:
-        ctx.exiger_euromillions("vérification sur l'historique officiel ; utilisez --tirage")
         historique = ctx.historique()
         if args.date:
             tirage_historique = trouver_tirage(historique, lire_date(args.date))
@@ -370,8 +359,7 @@ def cmd_multiple(args: argparse.Namespace, ctx: Contexte) -> None:
         f"{jeu.bonus_nom_pluriel if args.bonus > 1 else jeu.bonus_nom}"
     )
     texte_cout = f"  = {fmt.entier(analyse.nb_simples)} grilles simples, {fmt.euros(cout)} par tirage"
-    if jeu is EUROMILLIONS:
-        texte_cout += f" ({fmt.euros(cout_multiple(jeu, args.numeros, args.bonus, [ETOILE_PLUS]))} avec Étoile+)"
+    texte_cout += f" ({fmt.euros(cout_multiple(jeu, args.numeros, args.bonus, [ETOILE_PLUS]))} avec Étoile+)"
     ctx.ecrire(texte_cout)
     p = analyse.probabilite_gain
     ctx.ecrire(f"  Probabilité de gagner au moins un rang : {fmt.chances(p, decimales=2)} ({fmt.pourcentage(p)})")
@@ -416,7 +404,6 @@ def _decrire_situation(situation: str) -> str:
 
 
 def cmd_esperance(args: argparse.Namespace, ctx: Contexte) -> None:
-    ctx.exiger_euromillions("calcul d'espérance")
     ventes = lire_montant(args.ventes) if args.ventes else None
     codes = lire_montant(args.codes_my_million) if args.codes_my_million else None
     indice = 1.0
@@ -516,7 +503,6 @@ def _seuil_rentabilite(
 
 
 def cmd_simuler(args: argparse.Namespace, ctx: Contexte) -> None:
-    ctx.exiger_euromillions("simulation")
     jackpot = lire_montant(args.jackpot) if args.jackpot else None
     try:
         r = simuler(
@@ -563,7 +549,6 @@ def _intro_historique(ctx: Contexte, tirages: Sequence[TirageHistorique]) -> Non
 
 
 def cmd_stats(args: argparse.Namespace, ctx: Contexte) -> None:
-    ctx.exiger_euromillions("statistiques sur l'historique")
     tirages = ctx.historique()
     if args.depuis:
         depuis = lire_date(args.depuis)
@@ -604,7 +589,6 @@ def cmd_stats(args: argparse.Namespace, ctx: Contexte) -> None:
 
 
 def cmd_popularite(args: argparse.Namespace, ctx: Contexte) -> None:
-    ctx.exiger_euromillions("estimation de popularité")
     modele = ctx.modele()
     if modele is None:
         raise ErreurUtilisateur("historique indisponible : lancez d'abord « maj »")
@@ -650,7 +634,6 @@ def cmd_popularite(args: argparse.Namespace, ctx: Contexte) -> None:
 
 
 def cmd_retro(args: argparse.Namespace, ctx: Contexte) -> None:
-    ctx.exiger_euromillions("rétro-test")
     grille = lire_grille(ctx, args.grille)
     tirages = ctx.historique()
     depuis = lire_date(args.depuis) if args.depuis else None
@@ -714,7 +697,7 @@ def _afficher_analyse(
 def cmd_analyser(args: argparse.Namespace, ctx: Contexte) -> None:
     grille = lire_grille(ctx, args.grille, multiple=False)
     modele = ctx.modele()
-    historique = ctx.historique_si_disponible() if ctx.jeu is EUROMILLIONS else None
+    historique = ctx.historique_si_disponible()
     dernier = historique[-1].combinaison if historique else None
     ctx.ecrire(f"Analyse de la grille {grille}")
     _afficher_analyse(ctx, grille, modele, dernier)
@@ -733,6 +716,31 @@ def cmd_maj(args: argparse.Namespace, ctx: Contexte) -> None:
         f"{fmt.entier(len(tirages))} tirages enregistrés dans {chemin} "
         f"(du {tirages[0].date:%d/%m/%Y} au {tirages[-1].date:%d/%m/%Y})."
     )
+
+
+def cmd_interface(args: argparse.Namespace, ctx: Contexte) -> None:
+    chemin = ecrire_interface(args.sortie, ctx.historique())
+    if args.sans_ouvrir:
+        ctx.ecrire(f"Interface enregistrée : {chemin}")
+    elif ouvrir_interface(chemin):
+        ctx.ecrire(f"Interface ouverte dans votre navigateur : {chemin}")
+    else:
+        ctx.ecrire(f"Aucun navigateur détecté. Ouvrez ce fichier : {chemin}")
+
+
+def _lancer_interface(ctx: Contexte) -> int:
+    """Sans commande : ouvre l'interface graphique, ou le menu du terminal à défaut."""
+    try:
+        chemin = ecrire_interface(None, ctx.historique())
+    except (ErreurHistorique, OSError, ValueError) as erreur:
+        print(f"Interface graphique indisponible ({erreur}).", file=sys.stderr)
+        return menu(ctx)
+    if ouvrir_interface(chemin):
+        ctx.ecrire(f"Interface ouverte dans votre navigateur : {chemin}")
+        ctx.ecrire("Menu dans le terminal : python -m proba_loto menu")
+        return 0
+    ctx.ecrire(f"Aucun navigateur détecté (fichier de l'interface : {chemin}).")
+    return menu(ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -761,16 +769,16 @@ def _demander(question: str, defaut: str = "", lire: Callable[[str], str] = _lir
 def menu(ctx: Contexte, lire: Callable[[str], str] = _lire_clavier) -> int:
     """Menu interactif ; chaque choix exécute la commande correspondante."""
     options: List[Tuple[str, str, Callable[[], List[str]]]] = [
-        ("1", "Probabilités de gain", lambda: ["probas"] + (["--etoile-plus"] if ctx.jeu is EUROMILLIONS else [])),
+        ("1", "Probabilités de gain", lambda: ["probas", "--etoile-plus"]),
         ("2", "Générer des grilles", lambda: _menu_generer(ctx, lire)),
         ("3", "Vérifier une grille", lambda: _menu_verifier(ctx, lire)),
         ("4", "Grille multiple : coût et probabilités", lambda: _menu_multiple(ctx, lire)),
-        ("5", "Espérance de gain (EuroMillions)", lambda: _menu_esperance(lire)),
-        ("6", "Simuler des années de jeu (EuroMillions)", lambda: _menu_simuler(lire)),
-        ("7", "Statistiques des tirages réels (EuroMillions)", lambda: ["stats"]),
-        ("8", "Popularité des numéros (EuroMillions)", lambda: ["popularite"]),
-        ("9", "Rejouer une grille sur l'historique (EuroMillions)", lambda: ["retro", _demander("Grille", "3 5 37 44 49 + 5 6", lire)]),
-        ("10", "Analyser une grille", lambda: ["analyser", _demander("Grille", _exemple(ctx.jeu), lire)]),
+        ("5", "Espérance de gain", lambda: _menu_esperance(lire)),
+        ("6", "Simuler des années de jeu", lambda: _menu_simuler(lire)),
+        ("7", "Statistiques des tirages réels", lambda: ["stats"]),
+        ("8", "Popularité des numéros", lambda: ["popularite"]),
+        ("9", "Rejouer une grille sur l'historique", lambda: ["retro", _demander("Grille", "3 5 37 44 49 + 5 6", lire)]),
+        ("10", "Analyser une grille", lambda: ["analyser", _demander("Grille", EXEMPLE_GRILLE, lire)]),
     ]
     while True:
         ctx.ecrire()
@@ -779,22 +787,16 @@ def menu(ctx: Contexte, lire: Callable[[str], str] = _lire_clavier) -> int:
         ctx.ecrire("=" * 62)
         for cle, libelle, _ in options:
             ctx.ecrire(f"  {cle:>2}. {libelle}")
-        autre = "Loto" if ctx.jeu is EUROMILLIONS else "EuroMillions"
-        ctx.ecrire(f"   J. Passer au {autre}")
         ctx.ecrire("   0. Quitter")
         try:
             choix = _demander("\nVotre choix", lire=lire).upper()
             if choix in ("0", "Q"):
                 break
-            if choix == "J":
-                ctx.jeu = JEUX["loto"] if ctx.jeu is EUROMILLIONS else EUROMILLIONS
-                ctx._modele = None
-                continue
             action = next((a for cle, _, a in options if cle == choix), None)
             if action is None:
                 ctx.ecrire("Choix invalide.")
                 continue
-            arguments = ["--jeu", ctx.jeu.cle] + action()
+            arguments = action()
             ctx.ecrire()
             executer(arguments, ctx)
             _demander("\nEntrée pour revenir au menu", lire=lire)
@@ -804,8 +806,7 @@ def menu(ctx: Contexte, lire: Callable[[str], str] = _lire_clavier) -> int:
     return 0
 
 
-def _exemple(jeu: Jeu) -> str:
-    return "3 5 37 44 49 + 5 6" if jeu is EUROMILLIONS else "3 5 37 44 49 + 7"
+EXEMPLE_GRILLE = "3 5 37 44 49 + 5 6"
 
 
 def _menu_generer(ctx: Contexte, lire: Callable[[str], str]) -> List[str]:
@@ -819,17 +820,14 @@ def _menu_generer(ctx: Contexte, lire: Callable[[str], str]) -> List[str]:
 
 
 def _menu_verifier(ctx: Contexte, lire: Callable[[str], str]) -> List[str]:
-    grille = _demander("Votre grille", _exemple(ctx.jeu), lire)
-    if ctx.jeu is EUROMILLIONS:
-        date = _demander("Date du tirage (JJ/MM/AAAA, vide = dernier tirage)", "", lire)
-        return ["verifier", grille] + (["--date", date] if date else [])
-    tirage = _demander("Tirage (numéros + N° Chance)", "", lire)
-    return ["verifier", grille, "--tirage", tirage]
+    grille = _demander("Votre grille", EXEMPLE_GRILLE, lire)
+    date = _demander("Date du tirage (JJ/MM/AAAA, vide = dernier tirage)", "", lire)
+    return ["verifier", grille] + (["--date", date] if date else [])
 
 
 def _menu_multiple(ctx: Contexte, lire: Callable[[str], str]) -> List[str]:
     numeros = _demander("Nombre de numéros cochés", "6", lire)
-    bonus = _demander(f"Nombre de {ctx.jeu.bonus_nom_pluriel} cochés", "3" if ctx.jeu is EUROMILLIONS else "1", lire)
+    bonus = _demander("Nombre d'étoiles cochées", "3", lire)
     return ["multiple", numeros, bonus]
 
 
@@ -851,18 +849,17 @@ def _menu_simuler(lire: Callable[[str], str]) -> List[str]:
 
 def _ajouter_bonus(parseur: argparse.ArgumentParser, aide: str) -> None:
     parseur.add_argument(
-        "--etoiles", "--chance", "--bonus", dest="bonus", type=int, nargs="+", metavar="N", help=aide
+        "--etoiles", "--bonus", dest="bonus", type=int, nargs="+", metavar="N", help=aide
     )
 
 
 def construire_parseur() -> argparse.ArgumentParser:
     parseur = argparse.ArgumentParser(
         prog="proba-loto",
-        description="Calculateur EuroMillions et Loto : probabilités exactes, grilles, espérance, statistiques réelles.",
+        description="Calculateur EuroMillions : probabilités exactes, grilles, espérance, statistiques réelles. Sans commande : interface graphique.",
         epilog="Exemple : python -m proba_loto probas  |  python -m proba_loto generer -n 5 --strategie anti-partage",
     )
     parseur.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    parseur.add_argument("--jeu", default="euromillions", help="euromillions (défaut) ou loto")
     parseur.add_argument("--donnees", metavar="FICHIER", help="historique à utiliser (CSV normalisé, CSV ou ZIP FDJ)")
     sous = parseur.add_subparsers(dest="commande", metavar="commande")
 
@@ -875,7 +872,7 @@ def construire_parseur() -> argparse.ArgumentParser:
     p.add_argument("-n", "--nombre", type=int, default=1, help="nombre de grilles (défaut : 1)")
     p.add_argument("--strategie", choices=STRATEGIES, default="aleatoire")
     p.add_argument("--numeros", type=int, nargs="+", metavar="N", help="numéros favoris à inclure")
-    _ajouter_bonus(p, "étoiles (ou N° Chance) favoris à inclure")
+    _ajouter_bonus(p, "étoiles favorites à inclure")
     p.add_argument("--graine", type=int, help="graine pour des tirages reproductibles")
     p.add_argument("--details", action="store_true", help="analyser chaque grille")
     p.set_defaults(fonction=cmd_generer)
@@ -890,10 +887,10 @@ def construire_parseur() -> argparse.ArgumentParser:
 
     p = sous.add_parser("multiple", help="coût, probabilités et gains d'une grille multiple")
     p.add_argument("numeros", type=int, help="nombre de numéros cochés")
-    p.add_argument("bonus", type=int, help="nombre d'étoiles (ou de N° Chance) cochés")
+    p.add_argument("bonus", type=int, help="nombre d'étoiles cochées")
     p.set_defaults(fonction=cmd_multiple)
 
-    p = sous.add_parser("esperance", help="espérance de gain selon le jackpot (EuroMillions)")
+    p = sous.add_parser("esperance", help="espérance de gain selon le jackpot")
     p.add_argument("--jackpot", help="montant annoncé, ex. 59M (sans : tableau de 17 à 250 M€)")
     p.add_argument("--ventes", help="grilles jouées en Europe pour ce tirage (défaut : estimation)")
     p.add_argument("--codes-my-million", help="codes My Million en jeu (défaut : 21,6 %% des ventes)")
@@ -902,7 +899,7 @@ def construire_parseur() -> argparse.ArgumentParser:
     p.add_argument("--grille", help="tenir compte de la popularité de cette grille")
     p.set_defaults(fonction=cmd_esperance)
 
-    p = sous.add_parser("simuler", help="simuler des années de jeu (EuroMillions)")
+    p = sous.add_parser("simuler", help="simuler des années de jeu")
     p.add_argument("--annees", type=float, default=10)
     p.add_argument("--grilles", type=int, default=1, help="grilles par tirage")
     p.add_argument("--joueurs", type=int, default=1000, help="nombre de joueurs simulés")
@@ -934,27 +931,28 @@ def construire_parseur() -> argparse.ArgumentParser:
     p.add_argument("--sortie", help=f"fichier de destination (défaut : cache utilisateur ; données livrées : {DONNEES_EMBARQUEES.name})")
     p.set_defaults(fonction=cmd_maj)
 
-    p = sous.add_parser("menu", help="menu interactif")
-    p.set_defaults(fonction=None)
+    p = sous.add_parser("interface", help="ouvrir l'interface graphique dans le navigateur")
+    p.add_argument("--sortie", help="enregistrer la page dans ce fichier (défaut : cache utilisateur)")
+    p.add_argument("--sans-ouvrir", action="store_true", help="enregistrer la page sans ouvrir le navigateur")
+    p.set_defaults(fonction=cmd_interface)
+
+    p = sous.add_parser("menu", help="menu interactif dans le terminal")
+    p.set_defaults(fonction="menu")
     return parseur
 
 
 def executer(arguments: Sequence[str], ctx: Optional[Contexte] = None) -> int:
     parseur = construire_parseur()
     args = parseur.parse_args(list(arguments))
-    try:
-        jeu = obtenir_jeu(args.jeu)
-    except KeyError as erreur:
-        parseur.error(str(erreur.args[0]))
     if ctx is None:
-        ctx = Contexte(jeu, args.donnees)
-    else:
-        ctx.jeu = jeu
-        if args.donnees:
-            ctx.donnees = args.donnees
+        ctx = Contexte(EUROMILLIONS, args.donnees)
+    elif args.donnees:
+        ctx.donnees = args.donnees
     fonction = getattr(args, "fonction", None)
-    if fonction is None:
+    if fonction == "menu":
         return menu(ctx)
+    if fonction is None:
+        return _lancer_interface(ctx)
     try:
         fonction(args, ctx)
     except (ErreurUtilisateur, ErreurGrille, ErreurHistorique) as erreur:

@@ -1,4 +1,4 @@
-"""Calculateur de probabilités EuroMillions – My Million (et Loto) de la FDJ.
+"""Calculateur de probabilités EuroMillions – My Million de la FDJ.
 
 Probabilités exactes, grilles multiples, espérance de gain, génération de
 grilles et statistiques sur l'historique officiel des tirages.
@@ -15,7 +15,7 @@ Exemple ::
 
 __version__ = "2.0.0"
 
-from .jeux import ETOILE_PLUS, EUROMILLIONS, LOTO, Jeu, Rang, TableDeGains, obtenir_jeu
+from .jeux import ETOILE_PLUS, EUROMILLIONS, Jeu, Rang, TableDeGains, obtenir_jeu
 from .probabilites import (
     nb_combinaisons,
     probabilite,
@@ -32,7 +32,6 @@ __all__ = [
     "__version__",
     "EUROMILLIONS",
     "ETOILE_PLUS",
-    "LOTO",
     "Jeu",
     "Rang",
     "TableDeGains",

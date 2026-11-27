@@ -20,8 +20,6 @@ def test_probas(capsys):
     assert "1 sur 139 838 160" in out and "1 sur 12,97" in out
     assert "Option Étoile+" in out and "1 sur 4,73" in out
     assert "1 340 024 ans" in out
-    code, out, _ = lancer(capsys, "--jeu", "loto", "probas")
-    assert code == 0 and "1 sur 19 068 840" in out and "1 sur 5,99" in out
 
 
 def test_generer(capsys):
@@ -31,8 +29,6 @@ def test_generer(capsys):
     assert code == 0 and "07" in out and "Somme des numéros" in out
     code, _, err = lancer(capsys, "generer", "--numeros", "7", "7")
     assert code == 2 and "double" in err
-    code, out, _ = lancer(capsys, "--jeu", "loto", "generer", "-n", "2", "--chance", "7", "--graine", "3")
-    assert code == 0 and out.count("N° Chance 7") == 2
 
 
 def test_verifier(capsys):
@@ -45,8 +41,6 @@ def test_verifier(capsys):
     assert code == 0 and "rang 9" in out and "gain moyen estimé" in out
     code, _, err = lancer(capsys, *DONNEES, "verifier", "1 2 3 4 5 + 1 2", "--date", "25/11/2026")
     assert code == 2 and "aucun tirage" in err
-    code, _, err = lancer(capsys, "--jeu", "loto", "verifier", "1 2 3 4 5 + 1")
-    assert code == 2 and "--tirage" in err
 
 
 def test_multiple(capsys):
@@ -68,8 +62,6 @@ def test_esperance(capsys):
     assert code == 0 and "jackpot 250 M€" in out and "Excédent du plafond" in out
     code, _, err = lancer(capsys, "esperance", "--jackpot", "300M")
     assert code == 2 and "plafond" in err
-    code, _, err = lancer(capsys, "--jeu", "loto", "esperance")
-    assert code == 2 and "réservée à l'EuroMillions" in err
 
 
 def test_simuler(capsys):
@@ -103,9 +95,9 @@ def test_maj(capsys, monkeypatch, tmp_path, historique):
     assert code == 0 and "1 061 tirages" in out
 
 
-def test_jeu_inconnu(capsys):
+def test_commande_inconnue(capsys):
     with pytest.raises(SystemExit) as sortie:
-        cli.main(["--jeu", "keno", "probas"])
+        cli.main(["inconnue"])
     assert sortie.value.code == 2
 
 
@@ -139,12 +131,13 @@ def _saisies(*reponses):
 
 def test_menu_interactif(capsys):
     ctx = cli.Contexte(cli.EUROMILLIONS, str(DONNEES_EMBARQUEES))
-    code = cli.menu(ctx, _saisies("4", "7", "3", "", "J", "1", "", "99", "0"))
+    code = cli.menu(ctx, _saisies("4", "7", "3", "", "1", "", "99", "0"))
     out = capsys.readouterr().out
     assert code == 0
-    assert "63 grilles simples" in out  # multiple EuroMillions
-    assert "CALCULATEUR LOTO" in out and "1 sur 19 068 840" in out
+    assert "63 grilles simples" in out  # grille multiple 7 × 3
+    assert "1 sur 139 838 160" in out and "Option Étoile+" in out
     assert "Choix invalide" in out and "Au revoir" in out
+    assert "Loto" not in out
 
 
 def test_menu_robuste_a_la_fin_de_saisie(capsys):
@@ -154,10 +147,30 @@ def test_menu_robuste_a_la_fin_de_saisie(capsys):
     assert "Au revoir" in capsys.readouterr().out
 
 
-def test_sans_commande_lance_le_menu(monkeypatch, capsys):
+def test_sans_commande_ouvre_l_interface(monkeypatch, capsys):
+    ouvertures = []
+    monkeypatch.setattr(cli, "ouvrir_interface", lambda chemin: ouvertures.append(chemin) or True)
+    assert cli.main([]) == 0
+    assert len(ouvertures) == 1 and ouvertures[0].name == "interface.html" and ouvertures[0].exists()
+    assert "Interface ouverte" in capsys.readouterr().out
+
+
+def test_sans_navigateur_bascule_sur_le_menu(monkeypatch, capsys):
     def interrompu(_question):
         raise KeyboardInterrupt
 
+    monkeypatch.setattr(cli, "ouvrir_interface", lambda chemin: False)
     monkeypatch.setattr("builtins.input", interrompu)
     assert cli.main([]) == 0
-    assert "Au revoir" in capsys.readouterr().out
+    sortie = capsys.readouterr().out
+    assert "Aucun navigateur" in sortie and "Au revoir" in sortie
+
+
+def test_commande_interface(capsys, tmp_path, monkeypatch):
+    chemin = tmp_path / "page.html"
+    code, out, _ = lancer(capsys, *DONNEES, "interface", "--sortie", str(chemin), "--sans-ouvrir")
+    assert code == 0 and chemin.exists() and str(chemin) in out
+    assert "Calculateur EuroMillions" in chemin.read_text(encoding="utf-8")
+    monkeypatch.setattr(cli, "ouvrir_interface", lambda c: False)
+    code, out, _ = lancer(capsys, *DONNEES, "interface", "--sortie", str(chemin))
+    assert code == 0 and "Aucun navigateur" in out

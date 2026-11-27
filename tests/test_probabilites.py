@@ -9,7 +9,6 @@ import pytest
 from proba_loto.jeux import (
     ETOILE_PLUS,
     EUROMILLIONS as EM,
-    LOTO,
     Jeu,
     Rang,
     TableDeGains,
@@ -57,24 +56,8 @@ COTES_ETOILE_PLUS = {
     9: 49.3,
     10: 5.7,
 }
-# Règlement Loto (art. 8.1.1.2) : arrondi à l'entier.
-COTES_LOTO = {
-    (5, 1): 19_068_840,
-    (5, 0): 2_118_760,
-    (4, 1): 86_677,
-    (4, 0): 9_631,
-    (3, 1): 2_016,
-    (3, 0): 224,
-    (2, 1): 144,
-    (2, 0): 16,
-    (1, 1): 28,
-    (0, 1): 18,
-}
-
-
 def test_nombre_de_combinaisons():
     assert nb_combinaisons(EM) == 139_838_160 == math.comb(50, 5) * math.comb(12, 2)
-    assert nb_combinaisons(LOTO) == 19_068_840 == math.comb(49, 5) * 10
 
 
 @pytest.mark.parametrize("rang, cote", COTES_EUROMILLIONS.items())
@@ -89,15 +72,9 @@ def test_cotes_etoile_plus_conformes_au_reglement(rang, cote):
     assert float(1 / p) == pytest.approx(cote, abs=0.1)
 
 
-@pytest.mark.parametrize("correspondance, cote", COTES_LOTO.items())
-def test_cotes_loto_conformes_au_reglement(correspondance, cote):
-    assert round(float(1 / probabilite(LOTO, *correspondance))) == cote
-
-
 def test_probabilites_globales():
-    # « environ une chance sur 13 » (EuroMillions), « 5,99 » (Loto).
+    # « environ une chance sur 13 ».
     assert float(1 / probabilite_gain(EM)) == pytest.approx(12.97, abs=0.005)
-    assert round(float(1 / probabilite_gain(LOTO)), 2) == 5.99
     # Le règlement annonce « environ 4,8 » pour Étoile+, mais ses propres rangs
     # totalisent 29 594 459 combinaisons gagnantes, soit 1 sur 4,73.
     total_etoile_plus = sum(
@@ -107,8 +84,8 @@ def test_probabilites_globales():
     assert float(1 / probabilite_gain(EM, ETOILE_PLUS)) == pytest.approx(4.725, abs=0.001)
 
 
-@pytest.mark.parametrize("jeu", [EM, LOTO])
-def test_la_somme_de_toutes_les_issues_vaut_exactement_un(jeu):
+def test_la_somme_de_toutes_les_issues_vaut_exactement_un():
+    jeu = EM
     total = sum(
         probabilite(jeu, a, b)
         for a in range(jeu.numeros_par_grille + 1)
@@ -155,16 +132,12 @@ def test_tableau_et_libelles():
     assert lignes[10].libelle == "1 numéro + 2 étoiles"
     assert lignes[12].libelle == "2 numéros + 0 étoile"
     assert lignes[0].cas_favorables == 1
-    loto = tableau_probabilites(LOTO)
-    assert loto[8].libelle == "1 numéro + N° Chance ou N° Chance seul"
-    assert loto[1].libelle == "5 numéros"
 
 
 def test_parts_reglementaires():
     parts_em = sum(r.part for r in EM.gains.rangs)
     assert parts_em == Fraction("0.90")  # + 10 % pour le Fonds de Super Cagnotte
     assert sum(r.part for r in ETOILE_PLUS.rangs) == 1
-    assert sum(r.part for r in LOTO.gains.rangs if r.part is not None) == 1
     assert EM.gains.masse_par_grille == Fraction("1.10")
     assert ETOILE_PLUS.masse_par_grille == Fraction("0.60")
 
@@ -173,8 +146,6 @@ def test_gain_moyen_theorique():
     assert gain_moyen_theorique(EM, EM.gains.rang(13)) == pytest.approx(3.996, abs=0.001)
     assert gain_moyen_theorique(EM, EM.gains.rang(1)) is None  # jackpot variable
     assert gain_moyen_theorique(EM, ETOILE_PLUS.rang(10), ETOILE_PLUS) == pytest.approx(2.50, abs=0.01)
-    assert gain_moyen_theorique(LOTO, LOTO.gains.rang(9)) == pytest.approx(2.20)
-    assert gain_moyen_theorique(LOTO, LOTO.gains.rang(2)) is None
 
 
 def test_probabilite_au_moins_une_fois_stable_pour_les_petites_probabilites():
@@ -209,9 +180,8 @@ def test_saisies_invalides():
         nb_correspondances(EM, 2, 3)
     assert obtenir_jeu("EuroMillions") is EM
     assert obtenir_jeu("em") is EM
-    assert obtenir_jeu("LOTO") is LOTO
     with pytest.raises(KeyError):
-        obtenir_jeu("keno")
+        obtenir_jeu("loto")
     assert EM.option("etoile+") is ETOILE_PLUS
     with pytest.raises(KeyError):
         EM.option("super")

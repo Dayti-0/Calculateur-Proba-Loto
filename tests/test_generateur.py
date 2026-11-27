@@ -9,7 +9,7 @@ import pytest
 from proba_loto.analyse import motifs_populaires, profil_equilibre
 from proba_loto.generateur import STRATEGIES, Generateur
 from proba_loto.grilles import ErreurGrille, Grille
-from proba_loto.jeux import EUROMILLIONS as EM, LOTO
+from proba_loto.jeux import EUROMILLIONS as EM
 from proba_loto.popularite import indice_par_defaut
 from proba_loto.statistiques import khi2_uniformite
 
@@ -22,9 +22,9 @@ def _valide(grille, jeu):
     assert list(grille.numeros) == sorted(grille.numeros)
 
 
-@pytest.mark.parametrize("jeu", [EM, LOTO])
 @pytest.mark.parametrize("strategie", STRATEGIES)
-def test_toutes_les_strategies_produisent_des_grilles_valides(jeu, strategie):
+def test_toutes_les_strategies_produisent_des_grilles_valides(strategie):
+    jeu = EM
     grilles = Generateur(jeu, graine=1).grilles(60, strategie)
     assert len(grilles) == 60 == len(set(grilles))
     for grille in grilles:
@@ -117,4 +117,4 @@ def test_parametres_invalides():
 
 
 def test_grille_retournee_est_bien_une_grille():
-    assert isinstance(Generateur(LOTO, graine=1).grille(), Grille)
+    assert isinstance(Generateur(EM, graine=1).grille(), Grille)

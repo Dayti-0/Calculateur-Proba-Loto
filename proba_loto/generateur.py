@@ -102,7 +102,7 @@ class Generateur:
 
     def _poids_anti_partage(self) -> Tuple[Optional[Dict[int, float]], Optional[Dict[int, float]]]:
         modele = self.modele
-        if modele is None or not getattr(modele, "estime_sur_donnees", False) or self.jeu.cle != "euromillions":
+        if modele is None or not getattr(modele, "estime_sur_donnees", False):
             # Sans données de popularité : privilégier les numéros > 31, peu
             # joués car ils ne peuvent pas être des jours de naissance.
             return {n: (2.0 if n > 31 else 1.0) for n in range(1, self.jeu.numeros_max + 1)}, None
@@ -163,7 +163,6 @@ class Generateur:
         utilise_modele = (
             callable(indice)
             and getattr(self.modele, "estime_sur_donnees", False)
-            and self.jeu.cle == "euromillions"
         )
         acceptables: List[Grille] = []
         premiere: Optional[Grille] = None

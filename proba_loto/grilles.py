@@ -35,9 +35,9 @@ def nb_combinaisons_simples(jeu: Jeu, nb_numeros: int, nb_bonus: int) -> int:
 def verifier_multiple_autorisee(jeu: Jeu, nb_numeros: int, nb_bonus: int) -> None:
     """Lève :class:`ErreurGrille` si cette grille multiple n'est pas proposée par la FDJ.
 
-    Le tableau officiel (art. 3.1 EuroMillions, art. 3.1.1.6 Loto) correspond
+    Le tableau officiel (art. 3.1 du règlement EuroMillions) correspond
     exactement à : bornes min/max sur les numéros et complémentaires, et un nombre
-    de combinaisons simples ne dépassant pas 396 (EuroMillions) ou 168 (Loto).
+    de combinaisons simples ne dépassant pas 396.
     """
     k, j = jeu.numeros_par_grille, jeu.bonus_par_grille
     if not k <= nb_numeros <= jeu.multiple_numeros_max:
@@ -150,10 +150,7 @@ class Grille:
         return f"Grille({self.jeu.cle}: {self})"
 
     def __str__(self) -> str:
-        if self.jeu.bonus_par_grille == 1 and len(self.bonus) == 1:
-            return f"{liste_numeros(self.numeros)}  |  {self.jeu.bonus_nom} {self.bonus[0]}"
-        separateur = "★" if self.jeu.cle == "euromillions" else "|"
-        return f"{liste_numeros(self.numeros)}  {separateur}  {liste_numeros(self.bonus)}"
+        return f"{liste_numeros(self.numeros)}  ★  {liste_numeros(self.bonus)}"
 
 
 def _verifier_ensemble(valeurs: Sequence[int], minimum: int, maximum: int, nom: str, pluriel: str) -> None:

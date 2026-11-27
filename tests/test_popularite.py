@@ -6,7 +6,7 @@ import statistics
 import pytest
 
 from proba_loto.grilles import Grille
-from proba_loto.jeux import EUROMILLIONS as EM, LOTO
+from proba_loto.jeux import EUROMILLIONS as EM
 from proba_loto.popularite import _resoudre, estimer_popularite, indice_par_defaut
 
 
@@ -43,8 +43,6 @@ def test_indices_extremes(modele):
     assert modele.indice(Grille.depuis_texte(EM, "36 41 43 46 48 + 11 12")) < 0.4
     with pytest.raises(ValueError):
         modele.indice(Grille.depuis_texte(EM, "1 2 3 4 5 6 + 1 2"))
-    with pytest.raises(ValueError):
-        modele.indice(Grille.depuis_texte(LOTO, "1 2 3 4 5 + 1"))
 
 
 def test_modele_neutre_et_donnees_insuffisantes(historique):

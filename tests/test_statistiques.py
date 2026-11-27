@@ -7,7 +7,7 @@ import pytest
 
 from proba_loto.grilles import Grille
 from proba_loto.historique import TirageHistorique, trouver_tirage
-from proba_loto.jeux import EUROMILLIONS as EM, LOTO
+from proba_loto.jeux import EUROMILLIONS as EM
 from proba_loto.statistiques import (
     p_valeur_khi2,
     retro_tester,
@@ -107,9 +107,7 @@ def test_retro_test_ligne_officielle_sans_effectifs(historique):
     assert resultat.gains[0].montant == pytest.approx(t.rapports[12])
 
 
-def test_retro_test_multiple_et_loto(historique):
+def test_retro_test_multiple(historique):
     grille = Grille.depuis_texte(EM, "1 2 3 4 5 6 + 1 2 3")
     resultat = retro_tester(grille, historique[-10:])
     assert resultat.mise_totale == pytest.approx(2.5 * 18 * 10)
-    with pytest.raises(ValueError):
-        retro_tester(Grille.depuis_texte(LOTO, "1 2 3 4 5 + 1"), historique)

@@ -1,0 +1,1436 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--DEBUT_PAGE-->
+<title>Calculateur EuroMillions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Bulletin de jeu interactif : en-tête collant avec onglets, panneaux en grille (deux colonnes, une seule sur téléphone). */
+:root {
+  --fond: #edf1f8;
+  --surface: #ffffff;
+  --surface-2: #f3f6fb;
+  --encre: #121a2e;
+  --encre-2: #4a5472;
+  --encre-3: #67718f;
+  --trait: #d6dcea;
+  --bleu: #1f3f94;
+  --bleu-2: #2c52bd;
+  --bleu-pale: #e3eaff;
+  --sur-bleu: #ffffff;
+  --or: #b97f00;
+  --or-vif: #f3b52f;
+  --or-pale: #fff3d4;
+  --sur-or: #241800;
+  --vert: #157347;
+  --vert-pale: #ddf2e6;
+  --rouge: #b42318;
+  --rouge-pale: #fde7e4;
+  --ombre: 0 1px 2px rgb(18 26 46 / 6%), 0 8px 24px rgb(18 26 46 / 6%);
+  --titre: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --texte: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+  --rayon: 16px;
+  --rayon-petit: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fond: #0b1222; --surface: #121b30; --surface-2: #182340; --encre: #e7ecf7; --encre-2: #aab4cc;
+    --encre-3: #8b95b0; --trait: #27334f; --bleu: #9db8ff; --bleu-2: #bccfff; --bleu-pale: #1b2a50;
+    --sur-bleu: #0b1222; --or: #f2c14e; --or-vif: #f5c75a; --or-pale: #3a2e10; --sur-or: #1d1400;
+    --vert: #62d39d; --vert-pale: #0f3424; --rouge: #ff9188; --rouge-pale: #3d1614;
+    --ombre: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 30%);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fond: #0b1222; --surface: #121b30; --surface-2: #182340; --encre: #e7ecf7; --encre-2: #aab4cc;
+  --encre-3: #8b95b0; --trait: #27334f; --bleu: #9db8ff; --bleu-2: #bccfff; --bleu-pale: #1b2a50;
+  --sur-bleu: #0b1222; --or: #f2c14e; --or-vif: #f5c75a; --or-pale: #3a2e10; --sur-or: #1d1400;
+  --vert: #62d39d; --vert-pale: #0f3424; --rouge: #ff9188; --rouge-pale: #3d1614;
+  --ombre: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 30%);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fond); color: var(--encre); font: 15px/1.55 var(--texte); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.enveloppe { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--titre); text-wrap: balance; margin: 0; line-height: 1.15; }
+h2 { font-size: 1.3rem; font-weight: 800; }
+h3 { font-size: 1.02rem; font-weight: 600; }
+p { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--bleu-2); outline-offset: 2px; }
+.nombres { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+
+/* En-tête et onglets */
+.barre { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--trait); }
+.barre-haut { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px 4px; flex-wrap: wrap; }
+.marque { display: flex; align-items: center; gap: 10px; }
+.marque svg { width: 30px; height: 30px; flex: none; }
+.marque svg path { fill: var(--or-vif); stroke: var(--or); stroke-width: 1.2; }
+.marque h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; }
+.marque p { font-size: 0.8rem; color: var(--encre-3); }
+.prochain { font-size: 0.82rem; color: var(--encre-2); text-align: right; }
+.onglets { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-block: 6px 0; }
+.onglets::-webkit-scrollbar { display: none; }
+.onglet { flex: none; border: 0; background: none; padding: 10px 14px 12px; border-bottom: 3px solid transparent; color: var(--encre-2); font-weight: 600; cursor: pointer; border-radius: 8px 8px 0 0; }
+.onglet:hover { color: var(--encre); background: var(--surface-2); }
+.onglet[aria-selected="true"] { color: var(--bleu); border-bottom-color: var(--bleu); }
+
+main { padding-block: 22px 40px; }
+.vue { display: grid; gap: 18px; }
+.colonnes { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 880px) { .colonnes { grid-template-columns: minmax(0, 1fr); } }
+.panneau { background: var(--surface); border: 1px solid var(--trait); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.panneau > *, .vue > *, .colonnes > * { min-width: 0; }
+.panneau > header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.discret { color: var(--encre-3); font-size: 0.86rem; }
+.intro { color: var(--encre-2); max-width: 68ch; }
+.etiquette { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--encre-3); }
+.separateur { border: 0; border-top: 1px solid var(--trait); margin: 2px 0; width: 100%; }
+
+/* Bulletin */
+.boules { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.boules-etoiles { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 360px; }
+.boule { aspect-ratio: 1; width: 100%; max-width: 100%; border-radius: 50%; border: 1.5px solid var(--trait); background: var(--surface); font: 600 0.98rem/1 var(--titre); font-variant-numeric: tabular-nums; cursor: pointer; display: grid; place-items: center; padding: 0; transition: background-color .12s, border-color .12s, transform .12s; }
+.boule:hover { border-color: var(--bleu-2); }
+.boule[aria-pressed="true"] { background: var(--bleu); border-color: var(--bleu); color: var(--sur-bleu); }
+.etoile { position: relative; aspect-ratio: 1; width: 100%; border: 0; background: none; cursor: pointer; padding: 0; display: grid; place-items: center; font: 800 0.92rem/1 var(--titre); }
+.etoile svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.etoile svg path { fill: var(--surface); stroke: var(--or); stroke-width: 1.4; transition: fill .12s; }
+.etoile span { position: relative; padding-top: 6%; }
+.etoile:hover svg path { fill: var(--or-pale); }
+.etoile[aria-pressed="true"] svg path { fill: var(--or-vif); }
+.etoile[aria-pressed="true"] { color: var(--sur-or); }
+@media (prefers-reduced-motion: no-preference) { .boule:active, .etoile:active { transform: scale(0.94); } }
+.compteur { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pastille { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.84rem; font-weight: 600; background: var(--surface-2); color: var(--encre-2); border: 1px solid var(--trait); }
+.pastille.ok { background: var(--vert-pale); color: var(--vert); border-color: transparent; }
+.pastille.alerte { background: var(--rouge-pale); color: var(--rouge); border-color: transparent; }
+.pastille.or { background: var(--or-pale); color: var(--or); border-color: transparent; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.bouton { border: 1px solid var(--trait); background: var(--surface); padding: 9px 14px; border-radius: var(--rayon-petit); font-weight: 600; cursor: pointer; }
+.bouton:hover { border-color: var(--bleu-2); color: var(--bleu); }
+.bouton.principal { background: var(--bleu); border-color: var(--bleu); color: var(--sur-bleu); }
+.bouton.principal:hover { background: var(--bleu-2); color: var(--sur-bleu); }
+.bouton.petit { padding: 5px 10px; font-size: 0.84rem; }
+
+/* Résultats */
+.tirage-ligne { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mini { width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center; font: 700 0.9rem/1 var(--titre); font-variant-numeric: tabular-nums; background: var(--surface-2); border: 1.5px solid var(--trait); flex: none; }
+.mini.trouve { background: var(--vert); border-color: var(--vert); color: var(--surface); }
+.mini.etoile-mini { border-radius: 9px; background: var(--or-pale); border-color: var(--or); color: var(--encre); }
+.mini.etoile-mini.trouve { background: var(--or-vif); border-color: var(--or); color: var(--sur-or); }
+.plus { color: var(--encre-3); font-weight: 600; padding: 0 2px; }
+.verdict { display: grid; gap: 4px; padding: 14px 16px; border-radius: var(--rayon-petit); background: var(--surface-2); }
+.verdict.gagne { background: var(--vert-pale); }
+.verdict strong { font-family: var(--titre); font-size: 1.15rem; }
+.liste-gains { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.liste-gains li { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.liste-gains li span:last-child { font-weight: 600; font-variant-numeric: tabular-nums; }
+.champ { display: grid; gap: 6px; }
+.champ label, .champ > span { font-weight: 600; font-size: 0.9rem; }
+select, input[type="text"], input[type="number"] { width: 100%; padding: 9px 11px; border-radius: var(--rayon-petit); border: 1px solid var(--trait); background: var(--surface); }
+.case { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; }
+.case input { width: 18px; height: 18px; accent-color: var(--bleu); }
+.erreur { color: var(--rouge); font-size: 0.88rem; font-weight: 500; }
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.chiffre { padding: 12px 14px; border-radius: var(--rayon-petit); background: var(--surface-2); display: grid; gap: 2px; min-width: 0; }
+.chiffre b { font: 800 1.25rem/1.2 var(--titre); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.chiffre.bon b { color: var(--vert); }
+.chiffre.mauvais b { color: var(--rouge); }
+.motifs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Tableaux */
+.defile { overflow-x: auto; max-width: 100%; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--trait); white-space: nowrap; }
+th { font-size: 0.74rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--encre-3); font-weight: 600; }
+th:first-child, td:first-child, th.g, td.g { text-align: left; }
+tbody tr:hover { background: var(--surface-2); }
+td.c { white-space: normal; text-align: left; }
+
+/* Générateur */
+.strategies { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.strategie { position: relative; display: grid; gap: 4px; padding: 14px; border: 1.5px solid var(--trait); border-radius: var(--rayon-petit); cursor: pointer; background: var(--surface); }
+.strategie input { position: absolute; opacity: 0; pointer-events: none; }
+.strategie b { font-family: var(--titre); font-size: 1rem; }
+.strategie span { color: var(--encre-2); font-size: 0.86rem; }
+.strategie:has(input:checked) { border-color: var(--bleu); background: var(--bleu-pale); }
+.strategie:has(input:focus-visible) { outline: 3px solid var(--bleu-2); outline-offset: 2px; }
+.reglage { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.reglage input[type="range"] { flex: 1 1 180px; accent-color: var(--bleu); }
+.reglage output { min-width: 3ch; font-weight: 700; font-variant-numeric: tabular-nums; }
+.grilles-generees { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.grilles-generees li { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--trait); border-radius: var(--rayon-petit); }
+.grilles-generees .tirage-ligne { flex: 1 1 280px; }
+
+/* Rentabilité */
+.grand-nombre { font: 800 clamp(1.9rem, 5vw, 2.6rem)/1.1 var(--titre); font-variant-numeric: tabular-nums; }
+.jauge { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--trait); }
+.jauge span { display: block; height: 100%; }
+.legende { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.84rem; color: var(--encre-2); }
+.legende i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.c-rangs { background: var(--bleu); } .c-jackpot { background: var(--or-vif); } .c-mm { background: var(--vert); } .c-ep { background: var(--bleu-2); } .c-plafond { background: var(--or); }
+.radios { display: flex; gap: 8px; flex-wrap: wrap; }
+.radios label { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--trait); border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
+.radios label:has(input:checked) { border-color: var(--bleu); background: var(--bleu-pale); color: var(--bleu); font-weight: 600; }
+.radios input { accent-color: var(--bleu); }
+
+/* Graphiques */
+.graphique { width: 100%; height: auto; display: block; }
+.graphique .barre-v { fill: var(--bleu); }
+.graphique .barre-v.chaud { fill: var(--bleu-2); }
+.graphique .attendu { stroke: var(--or); stroke-width: 2; stroke-dasharray: 6 4; }
+.graphique text { fill: var(--encre-3); font: 500 11px var(--texte); }
+.graphique .grille-fond { stroke: var(--trait); stroke-width: 1; }
+.barres-h { display: grid; gap: 6px; }
+.barre-h { display: grid; grid-template-columns: 2.6ch minmax(0, 1fr) 5ch; gap: 8px; align-items: center; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.barre-h b { font-family: var(--titre); }
+.barre-h .piste { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.barre-h .piste span { display: block; height: 100%; border-radius: 999px; }
+.barre-h .plus-joue { background: var(--rouge); }
+.barre-h .moins-joue { background: var(--vert); }
+.deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.derniers { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.derniers li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.derniers time { min-width: 13ch; color: var(--encre-2); font-size: 0.9rem; }
+
+footer.pied { border-top: 1px solid var(--trait); padding-block: 20px 32px; color: var(--encre-3); font-size: 0.84rem; display: grid; gap: 6px; }
+.copie { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--encre); color: var(--surface); padding: 9px 16px; border-radius: 999px; font-weight: 600; box-shadow: var(--ombre); z-index: 20; }
+@media (max-width: 520px) {
+  .marque p, .prochain { display: none; }
+  .barre-haut { padding-block: 10px 0; }
+  .marque h1 { font-size: 1.1rem; }
+  .onglet { padding: 8px 12px 10px; }
+  .panneau { padding: 16px; }
+  .boules { gap: 4px; }
+  .boule { font-size: 0.86rem; }
+  .prochain { text-align: left; }
+  .mini { width: 30px; height: 30px; font-size: 0.84rem; }
+}
+</style>
+<!--FIN_ENTETE-->
+</head>
+<body>
+<!--DEBUT_CORPS-->
+<header class="barre">
+  <div class="enveloppe">
+    <div class="barre-haut">
+      <div class="marque">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.6l-6.3 3.6 1.5-7.1L1.8 9.2 9 8.4z"/></svg>
+        <div>
+          <h1>Calculateur EuroMillions</h1>
+          <p>Chances exactes, vrais tirages, aucune promesse.</p>
+        </div>
+      </div>
+      <p class="prochain" id="info-donnees">Règles du règlement FDJ en vigueur</p>
+    </div>
+    <nav class="onglets" role="tablist" aria-label="Sections">
+      <button class="onglet" role="tab" id="onglet-grille" aria-controls="vue-grille" aria-selected="true" data-vue="grille">Ma grille</button>
+      <button class="onglet" role="tab" id="onglet-generer" aria-controls="vue-generer" aria-selected="false" data-vue="generer">Générer</button>
+      <button class="onglet" role="tab" id="onglet-chances" aria-controls="vue-chances" aria-selected="false" data-vue="chances">Mes chances</button>
+      <button class="onglet" role="tab" id="onglet-rentabilite" aria-controls="vue-rentabilite" aria-selected="false" data-vue="rentabilite">Rentabilité</button>
+      <button class="onglet" role="tab" id="onglet-stats" aria-controls="vue-stats" aria-selected="false" data-vue="stats">Statistiques</button>
+    </nav>
+  </div>
+</header>
+
+<main class="enveloppe">
+  <!-- ======================= MA GRILLE ======================= -->
+  <section class="vue" id="vue-grille" role="tabpanel" aria-labelledby="onglet-grille">
+    <div class="colonnes">
+      <div class="panneau">
+        <header>
+          <h2>Cochez votre grille</h2>
+          <div class="compteur" id="compteur"></div>
+        </header>
+        <p class="discret">5 numéros et 2 étoiles. Cochez-en davantage (jusqu'à 10 numéros et 12 étoiles) pour une grille multiple.</p>
+        <div class="boules" id="bulletin-numeros" role="group" aria-label="Numéros de 1 à 50"></div>
+        <span class="etiquette">Étoiles</span>
+        <div class="boules boules-etoiles" id="bulletin-etoiles" role="group" aria-label="Étoiles de 1 à 12"></div>
+        <div class="actions">
+          <button class="bouton" id="btn-hasard" type="button">Remplir au hasard</button>
+          <button class="bouton" id="btn-effacer" type="button">Effacer</button>
+          <button class="bouton" id="btn-copier-grille" type="button">Copier la grille</button>
+        </div>
+        <p class="discret" id="cout-grille"></p>
+      </div>
+
+      <div class="vue">
+        <div class="panneau" id="panneau-tirage">
+          <header><h2>Comparer à un tirage</h2></header>
+          <div class="champ">
+            <label for="choix-tirage">Tirage</label>
+            <select id="choix-tirage"></select>
+          </div>
+          <div class="champ" id="zone-tirage-manuel" hidden>
+            <label for="tirage-manuel">Combinaison du tirage</label>
+            <input type="text" id="tirage-manuel" inputmode="numeric" placeholder="ex. 3 5 37 44 49 + 5 6" autocomplete="off">
+          </div>
+          <label class="case"><input type="checkbox" id="opt-etoile-plus"> Avec l'option Étoile+ (+1 € par grille)</label>
+          <div id="resultat-tirage"></div>
+        </div>
+
+        <div class="panneau" id="panneau-retro">
+          <header><h2>Et si vous l'aviez jouée à chaque tirage ?</h2></header>
+          <div id="resultat-retro"></div>
+        </div>
+
+        <div class="panneau" id="panneau-analyse">
+          <header><h2>Votre grille à la loupe</h2></header>
+          <div id="resultat-analyse"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= GÉNÉRER ======================= -->
+  <section class="vue" id="vue-generer" role="tabpanel" aria-labelledby="onglet-generer" hidden>
+    <div class="panneau">
+      <header><h2>Générer des grilles</h2></header>
+      <p class="intro">Aucune méthode ne fait gagner plus souvent : chaque grille a exactement 1 chance sur 139 838 160 de décrocher le jackpot. En revanche, certaines grilles sont jouées par beaucoup moins de monde, et un gain serait alors moins partagé.</p>
+      <div class="strategies" role="radiogroup" aria-label="Méthode">
+        <label class="strategie"><input type="radio" name="strategie" value="anti-partage" checked><b>Moins partagée</b><span>Numéros peu joués par les autres, sans dates ni suites. Recommandé.</span></label>
+        <label class="strategie"><input type="radio" name="strategie" value="aleatoire"><b>Au hasard</b><span>Tirage parfaitement équitable, comme un flash.</span></label>
+        <label class="strategie"><input type="radio" name="strategie" value="equilibree"><b>Équilibrée</b><span>Profil le plus courant des tirages (somme, pairs, dizaines).</span></label>
+        <label class="strategie"><input type="radio" name="strategie" value="couverture"><b>Couverture</b><span>Le plus de numéros différents possible : 10 grilles couvrent les 50.</span></label>
+      </div>
+      <div class="reglage">
+        <label for="nb-grilles">Nombre de grilles</label>
+        <input type="range" id="nb-grilles" min="1" max="20" value="5">
+        <output id="nb-grilles-valeur" for="nb-grilles">5</output>
+      </div>
+      <details>
+        <summary>Inclure mes numéros fétiches (facultatif)</summary>
+        <div class="deux" style="margin-top:12px">
+          <div class="champ"><label for="fav-numeros">Numéros</label><input type="text" id="fav-numeros" inputmode="numeric" placeholder="ex. 7 13" autocomplete="off"></div>
+          <div class="champ"><label for="fav-etoiles">Étoiles</label><input type="text" id="fav-etoiles" inputmode="numeric" placeholder="ex. 3" autocomplete="off"></div>
+        </div>
+      </details>
+      <p class="erreur" id="erreur-generer" hidden></p>
+      <div class="actions">
+        <button class="bouton principal" id="btn-generer" type="button">Générer</button>
+        <button class="bouton" id="btn-copier-tout" type="button" hidden>Copier toutes les grilles</button>
+      </div>
+      <ul class="grilles-generees" id="grilles-generees"></ul>
+      <p class="discret" id="note-generer"></p>
+    </div>
+  </section>
+
+  <!-- ======================= CHANCES ======================= -->
+  <section class="vue" id="vue-chances" role="tabpanel" aria-labelledby="onglet-chances" hidden>
+    <div class="panneau">
+      <header><h2>Vos chances avec une grille</h2><span class="discret" id="combinaisons"></span></header>
+      <div class="chiffres" id="chiffres-chances"></div>
+      <label class="case"><input type="checkbox" id="opt-tableau-ep"> Afficher aussi l'option Étoile+</label>
+      <div class="defile"><table id="tableau-rangs"></table></div>
+      <p class="discret">Gain moyen : montant moyen reçu par un gagnant, déduit de la répartition du règlement (2,20 € × 50 % × part du rang ÷ probabilité) et confirmé par les rapports réels depuis 2020. Le montant réel varie selon le nombre de gagnants.</p>
+    </div>
+    <div class="panneau">
+      <header><h2>Grille multiple</h2></header>
+      <p class="intro">Une multiple joue toutes les combinaisons de vos numéros et étoiles. Elle coûte exactement le prix de ses grilles simples : vos chances augmentent dans la même proportion que la mise.</p>
+      <div class="deux">
+        <div class="champ"><label for="mult-numeros">Numéros cochés</label><select id="mult-numeros"></select></div>
+        <div class="champ"><label for="mult-etoiles">Étoiles cochées</label><select id="mult-etoiles"></select></div>
+      </div>
+      <div id="resultat-multiple"></div>
+    </div>
+  </section>
+
+  <!-- ======================= RENTABILITÉ ======================= -->
+  <section class="vue" id="vue-rentabilite" role="tabpanel" aria-labelledby="onglet-rentabilite" hidden>
+    <div class="colonnes">
+      <div class="panneau">
+        <header><h2>Combien récupère-t-on pour 2,50 € ?</h2></header>
+        <div class="reglage">
+          <label for="jackpot">Jackpot annoncé</label>
+          <input type="range" id="jackpot" min="17" max="250" step="1" value="50">
+          <output id="jackpot-valeur" for="jackpot">50 M€</output>
+        </div>
+        <div class="radios" role="radiogroup" aria-label="Situation">
+          <label><input type="radio" name="situation" value="normal" checked> Tirage ordinaire</label>
+          <label><input type="radio" name="situation" value="plafond"> Jackpot au plafond</label>
+          <label><input type="radio" name="situation" value="doit-etre-gagne"> Jackpot à distribuer</label>
+        </div>
+        <label class="case"><input type="checkbox" id="esp-etoile-plus"> Avec l'option Étoile+</label>
+        <label class="case"><input type="checkbox" id="esp-ma-grille"> Tenir compte de la popularité de ma grille</label>
+        <div id="resultat-esperance"></div>
+      </div>
+      <div class="panneau">
+        <header><h2>Jouer pendant des années</h2></header>
+        <p class="intro">Simulation de 1 000 joueurs qui jouent à chaque tirage (mardi et vendredi), avec les vraies probabilités et les gains moyens du règlement.</p>
+        <div class="reglage">
+          <label for="sim-annees">Durée</label>
+          <input type="range" id="sim-annees" min="1" max="50" value="10">
+          <output id="sim-annees-valeur" for="sim-annees">10 ans</output>
+        </div>
+        <div class="reglage">
+          <label for="sim-grilles">Grilles par tirage</label>
+          <input type="range" id="sim-grilles" min="1" max="10" value="1">
+          <output id="sim-grilles-valeur" for="sim-grilles">1</output>
+        </div>
+        <div class="actions"><button class="bouton principal" id="btn-simuler" type="button">Lancer la simulation</button></div>
+        <div id="resultat-simulation"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= STATISTIQUES ======================= -->
+  <section class="vue" id="vue-stats" role="tabpanel" aria-labelledby="onglet-stats" hidden>
+    <div class="panneau">
+      <header><h2>Les tirages sont-ils équitables ?</h2><span class="discret" id="periode-stats"></span></header>
+      <div class="chiffres" id="verdict-stats"></div>
+      <h3>Sorties de chaque numéro</h3>
+      <div id="graphique-numeros"></div>
+      <h3>Sorties de chaque étoile</h3>
+      <div id="graphique-etoiles"></div>
+      <p class="discret">La ligne pointillée indique le nombre de sorties attendu. Les écarts observés sont du même ordre que ceux que produit le hasard : un numéro souvent sorti ou « en retard » n'a pas plus de chances au prochain tirage.</p>
+    </div>
+    <div class="deux">
+      <div class="panneau">
+        <header><h2>Ce que jouent les autres</h2></header>
+        <p class="intro" id="intro-popularite"></p>
+        <div class="deux">
+          <div class="barres-h" id="plus-joues"></div>
+          <div class="barres-h" id="moins-joues"></div>
+        </div>
+        <h3>Étoiles</h3>
+        <div class="barres-h" id="popularite-etoiles"></div>
+      </div>
+      <div class="panneau">
+        <header><h2>Derniers tirages</h2></header>
+        <ul class="derniers" id="derniers-tirages"></ul>
+        <h3>Absents depuis le plus longtemps</h3>
+        <div class="motifs" id="absents"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="enveloppe pied">
+  <p>Projet indépendant, sans lien avec la Française des Jeux. Les montants officiels font foi sur fdj.fr. Règles : <span id="reference-reglement"></span>.</p>
+  <p>Les jeux d'argent sont interdits aux mineurs. Besoin d'aide : Joueurs Info Service, 09 74 75 13 13 (appel non surtaxé).</p>
+</footer>
+<div class="copie" id="message-copie" role="status" hidden></div>
+
+<script id="donnees-regles" type="application/json">/*REGLES*/</script>
+<script id="donnees-historique" type="application/json">/*HISTORIQUE*/</script>
+<script>
+(() => {
+  'use strict';
+
+  /* ================= Données ================= */
+  const $ = (selecteur, racine = document) => racine.querySelector(selecteur);
+  const REGLES = JSON.parse($('#donnees-regles').textContent);
+  const JEU = REGLES.jeu;
+  const C = REGLES.constantes;
+  const POP = REGLES.popularite;
+  const TABLE = JEU.gains;
+  const EP = JEU.options[0];
+  const N = JEU.numerosMax, K = JEU.numerosParGrille, M = JEU.bonusMax, J = JEU.bonusParGrille;
+  let HISTO = [];
+  let historiqueCharge = false;
+
+  /* ================= Mise en forme ================= */
+  const ESP = ' ';
+  const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  const entier = x => Math.round(x).toLocaleString('fr-FR');
+  const decimal = (x, d = 2) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const sansZeros = t => (t.includes(',') ? t.replace(/0+$/, '').replace(/,$/, '') : t);
+  function euros(x, d) {
+    if (d === undefined) d = Math.abs(x) >= 100000 && Number.isInteger(x) ? 0 : 2;
+    return decimal(x, d) + ESP + '€';
+  }
+  function eurosCompacts(x) {
+    if (Math.abs(x) >= 1e6) {
+      const m = x / 1e6;
+      return (Number.isInteger(m) ? entier(m) : sansZeros(decimal(m, 1))) + ESP + 'M€';
+    }
+    return euros(x);
+  }
+  function pourcentage(p, cs = 3) {
+    const v = p * 100;
+    if (v === 0) return '0' + ESP + '%';
+    const e = Math.floor(Math.log10(Math.abs(v)));
+    const d = Math.abs(v) >= 1 ? Math.min(2, Math.max(0, cs - 1 - e)) : cs - 1 - e;
+    return sansZeros(decimal(v, d)) + ESP + '%';
+  }
+  const pctFixe = (p, d = 1) => decimal(p * 100, d) + ESP + '%';
+  function chances(p, d = 1) {
+    if (p <= 0) return 'impossible';
+    const inv = 1 / p;
+    return '1 sur ' + (inv >= 1000 ? entier(inv) : sansZeros(decimal(inv, d)));
+  }
+  function duree(nbTirages, parSemaine) {
+    const semaines = nbTirages / parSemaine, ans = semaines / 52.1775;
+    if (ans >= 2) return entier(ans) + ' ans';
+    if (semaines >= 2) return entier(semaines) + ' semaines';
+    return entier(nbTirages) + ' tirage' + (nbTirages >= 2 ? 's' : '');
+  }
+  const deux = n => String(n).padStart(2, '0');
+  const echapper = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function dateLongue(iso) {
+    const [a, m, j] = iso.split('-').map(Number);
+    const d = new Date(a, m - 1, j, 12);
+    return `${JOURS[d.getDay()]} ${deux(j)}/${deux(m)}/${a}`;
+  }
+  const dateCourte = iso => iso.split('-').reverse().join('/');
+  const pluriel = (n, un, plusieurs) => `${entier(n)} ${n >= 2 ? plusieurs : un}`;
+  const libelleEtoiles = b => `${b} étoile${b > 1 ? 's' : ''}`;
+  const libelleCorr = (a, b) => `${a} numéro${a > 1 ? 's' : ''} + ${libelleEtoiles(b)}`;
+  const libelleRang = r => r.correspondances.map(([a, b]) => libelleCorr(a, b)).join(' ou ');
+
+  /* ================= Calculs exacts ================= */
+  function comb(n, k) {
+    if (k < 0 || k > n) return 0;
+    k = Math.min(k, n - k);
+    let r = 1;
+    for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+    return Math.round(r);
+  }
+  const TOTAL = comb(N, K) * comb(M, J);
+  const nbCorr = (a, b) => comb(K, a) * comb(N - K, K - a) * comb(J, b) * comb(M - J, J - b);
+  const probaRang = rang => rang.correspondances.reduce((s, [a, b]) => s + nbCorr(a, b), 0) / TOTAL;
+  const probaGain = table => table.rangs.reduce((s, r) => s + probaRang(r), 0);
+  function rangPour(table, a, b) {
+    for (const r of table.rangs) for (const [x, y] of r.correspondances) if (x === a && y === b) return r;
+    return null;
+  }
+  const rangNumero = (table, numero) => table.rangs.find(r => r.numero === numero);
+  const masse = table => table.mise * table.partGagnants;
+  function gainMoyen(rang, table) {
+    if (rang.part == null || (table === TABLE && rang.numero === 1)) return null;
+    return (masse(table) * rang.part) / probaRang(rang);
+  }
+  const nbSimples = (n, e) => comb(n, K) * comb(e, J);
+  function erreurMultiple(n, e) {
+    if (n < K || n > JEU.multipleNumerosMax) return `une grille comporte de ${K} à ${JEU.multipleNumerosMax} numéros`;
+    if (e < J || e > JEU.multipleBonusMax) return `une grille comporte de ${J} à ${JEU.multipleBonusMax} étoiles`;
+    const t = nbSimples(n, e);
+    if (t > JEU.multipleCombinaisonsMax) {
+      return `${n} numéros × ${e} étoiles représentent ${entier(t)} grilles simples ; la FDJ n'accepte pas plus de ${JEU.multipleCombinaisonsMax} grilles par multiple`;
+    }
+    return null;
+  }
+  function repartition(n, e, a, b, table) {
+    const gains = new Map();
+    for (let x = 0; x <= K; x++) {
+      const nx = comb(a, x) * comb(n - a, K - x);
+      if (!nx) continue;
+      for (let y = 0; y <= J; y++) {
+        const ny = comb(b, y) * comb(e - b, J - y);
+        if (!ny) continue;
+        const r = rangPour(table, x, y);
+        if (r) gains.set(r.numero, (gains.get(r.numero) || 0) + nx * ny);
+      }
+    }
+    return new Map([...gains.entries()].sort((p, q) => p[0] - q[0]));
+  }
+  function analyseMultiple(n, e, table = TABLE) {
+    const tn = comb(N, K), tb = comb(M, J);
+    const scenarios = [];
+    for (let a = 0; a <= K; a++) {
+      const ca = comb(n, a) * comb(N - n, K - a);
+      if (!ca) continue;
+      for (let b = 0; b <= J; b++) {
+        const cb = comb(e, b) * comb(M - e, J - b);
+        if (!cb) continue;
+        scenarios.push({ a, b, p: (ca / tn) * (cb / tb), gains: repartition(n, e, a, b, table) });
+      }
+    }
+    let pGain = 0;
+    const meilleur = new Map(), auMoinsUn = new Map();
+    for (const s of scenarios) {
+      if (!s.gains.size) continue;
+      pGain += s.p;
+      const m = Math.min(...s.gains.keys());
+      meilleur.set(m, (meilleur.get(m) || 0) + s.p);
+      for (const r of s.gains.keys()) auMoinsUn.set(r, (auMoinsUn.get(r) || 0) + s.p);
+    }
+    return { nbSimples: nbSimples(n, e), scenarios, pGain, meilleur, auMoinsUn };
+  }
+
+  /* ================= Hasard (générateur cryptographique) ================= */
+  const tampon = new Uint32Array(1);
+  function aleatoire() {
+    if (window.crypto && crypto.getRandomValues) { crypto.getRandomValues(tampon); return tampon[0] / 4294967296; }
+    return Math.random();
+  }
+  function melanger(t) {
+    for (let i = t.length - 1; i > 0; i--) { const j = Math.floor(aleatoire() * (i + 1)); [t[i], t[j]] = [t[j], t[i]]; }
+    return t;
+  }
+  const plage = n => Array.from({ length: n }, (_, i) => i + 1);
+
+  /* ================= Popularité ================= */
+  function symElem(poids, k) {
+    const e = [1, ...new Array(k).fill(0)];
+    for (const w of poids) for (let t = k; t >= 1; t--) e[t] += e[t - 1] * w;
+    return e[k];
+  }
+  const MOY_W = POP ? symElem(POP.numeros, K) / comb(N, K) : 1;
+  const MOY_V = POP ? symElem(POP.etoiles, J) / comb(M, J) : 1;
+  function indice(numeros, etoiles) {
+    if (!POP) return null;
+    let pw = 1, pv = 1;
+    for (const n of numeros) pw *= POP.numeros[n - 1];
+    for (const e of etoiles) pv *= POP.etoiles[e - 1];
+    return (pw / MOY_W) * (pv / MOY_V);
+  }
+
+  /* ================= Analyse d'une grille ================= */
+  function plusLongueSuite(t) {
+    if (!t.length) return 0;
+    const v = [...t].sort((a, b) => a - b);
+    let best = 1, cur = 1;
+    for (let i = 1; i < v.length; i++) { cur = v[i] === v[i - 1] + 1 ? cur + 1 : 1; best = Math.max(best, cur); }
+    return best;
+  }
+  function plusLongueProgression(t) {
+    const v = [...t].sort((a, b) => a - b), ens = new Set(v);
+    let best = v.length >= 2 ? 2 : v.length;
+    for (let i = 0; i < v.length; i++) for (let j = i + 1; j < v.length; j++) {
+      const r = v[j] - v[i];
+      if (r < 2) continue;
+      let l = 2, s = v[j] + r;
+      while (ens.has(s)) { l++; s += r; }
+      best = Math.max(best, l);
+    }
+    return best;
+  }
+  function motifs(numeros, dernier) {
+    const m = [];
+    const suite = plusLongueSuite(numeros);
+    if (suite >= 3) m.push(`${suite} numéros consécutifs`);
+    const prog = plusLongueProgression(numeros);
+    if (prog >= 4) m.push(`${prog} numéros en progression régulière`);
+    if (numeros.every(n => n <= 31)) m.push("tous les numéros ≤ 31 (dates d'anniversaire)");
+    const finales = {};
+    for (const n of numeros) finales[n % 10] = (finales[n % 10] || 0) + 1;
+    if (Math.max(...Object.values(finales)) >= 4) m.push('4 numéros ou plus avec le même chiffre des unités');
+    if (new Set(numeros.map(n => Math.floor((n - 1) / 10))).size === 1) m.push('tous les numéros dans la même dizaine');
+    for (let d = 3; d <= 10; d++) if (numeros.every(n => n % d === 0)) { m.push(`tous multiples de ${d}`); break; }
+    if (dernier) {
+      const communs = numeros.filter(n => dernier.numeros.includes(n)).length;
+      if (communs >= 3) m.push(`${communs} numéros du dernier tirage`);
+    }
+    return m;
+  }
+  const SOMMES = (() => {
+    const max = Array.from({ length: K }, (_, i) => N - i).reduce((a, b) => a + b, 0);
+    const c = Array.from({ length: K + 1 }, () => new Array(max + 1).fill(0));
+    c[0][0] = 1;
+    for (let num = 1; num <= N; num++) for (let t = Math.min(K, num); t >= 1; t--) for (let s = max; s >= num; s--) c[t][s] += c[t - 1][s - num];
+    const cumul = [];
+    let tot = 0;
+    for (const x of c[K]) { tot += x; cumul.push(tot); }
+    return cumul;
+  })();
+  function profilEquilibre(numeros) {
+    const [mn, mx] = JEU.bornesSomme;
+    const somme = numeros.reduce((a, b) => a + b, 0);
+    const pairs = numeros.filter(n => n % 2 === 0).length;
+    const bas = numeros.filter(n => n <= Math.floor(N / 2)).length;
+    return somme >= mn && somme <= mx && (pairs === 2 || pairs === 3) && (bas === 2 || bas === 3)
+      && plusLongueSuite(numeros) <= 2 && new Set(numeros.map(n => Math.floor((n - 1) / 10))).size >= 3;
+  }
+
+  /* ================= Générateurs ================= */
+  function completer(fixes, max, taille, poids) {
+    let f = [...fixes];
+    if (f.length > taille) f = melanger(f).slice(0, taille);
+    const exclus = new Set(f);
+    const restantes = plage(max).filter(v => !exclus.has(v));
+    const manque = taille - f.length;
+    let choisis;
+    if (!poids) choisis = melanger(restantes).slice(0, manque);
+    else choisis = restantes.map(v => [Math.pow(aleatoire(), 1 / poids[v - 1]), v]).sort((p, q) => q[0] - p[0]).slice(0, manque).map(x => x[1]);
+    return [...f, ...choisis].sort((a, b) => a - b);
+  }
+  function lireFavoris(texte, max, nom) {
+    const t = (texte.match(/\d+/g) || []).map(Number);
+    const hors = t.filter(v => v < 1 || v > max);
+    if (hors.length) throw new Error(`${nom} hors bornes (1 à ${max}) : ${hors.join(', ')}`);
+    if (new Set(t).size !== t.length) throw new Error(`${nom} en double`);
+    return t;
+  }
+  const accepteAntiPartage = (numeros, dernier) => motifs(numeros, dernier).length === 0 && numeros.filter(n => n > 31).length >= 2;
+  function genererUne(strategie, favN, favE, dernier) {
+    let poidsN = null, poidsE = null;
+    if (strategie === 'anti-partage') {
+      if (POP) { poidsN = POP.numeros.map(f => Math.pow(f, -4)); poidsE = POP.etoiles.map(f => Math.pow(f, -4)); }
+      else poidsN = plage(N).map(n => (n > 31 ? 2 : 1));
+    }
+    const candidat = () => ({ numeros: completer(favN, N, K, poidsN), etoiles: completer(favE, M, J, poidsE) });
+    if (strategie === 'aleatoire') return candidat();
+    if (strategie === 'equilibree') {
+      for (let i = 0; i < 20000; i++) { const g = candidat(); if (profilEquilibre(g.numeros)) return g; }
+      throw new Error('impossible de construire une grille équilibrée avec ces numéros fétiches');
+    }
+    const acceptables = [];
+    let premiere = null;
+    for (let i = 0; i < 20000; i++) {
+      const g = candidat();
+      premiere = premiere || g;
+      if (accepteAntiPartage(g.numeros, dernier)) { acceptables.push(g); if (!POP || acceptables.length >= 5) break; }
+    }
+    if (!acceptables.length) return premiere;
+    return POP ? acceptables.reduce((m, g) => (indice(g.numeros, g.etoiles) < indice(m.numeros, m.etoiles) ? g : m)) : acceptables[0];
+  }
+  function genererCouverture(nombre, favN, favE) {
+    if (favN.length > K || favE.length > J) throw new Error('trop de numéros fétiches pour la couverture');
+    const paquets = { n: [], e: [] };
+    const piocher = (paquet, max, exclus, taille) => {
+      const choisis = [];
+      const dispo = plage(max).filter(v => !exclus.includes(v));
+      while (choisis.length < taille) {
+        if (!paquet.length) paquet.push(...melanger([...dispo]));
+        const v = paquet.shift();
+        if (choisis.includes(v)) { paquet.push(v); if (paquet.every(x => choisis.includes(x))) paquet.length = 0; continue; }
+        choisis.push(v);
+      }
+      return choisis;
+    };
+    const res = [];
+    const vues = new Set();
+    let essais = 0;
+    while (res.length < nombre) {
+      const g = {
+        numeros: [...favN, ...piocher(paquets.n, N, favN, K - favN.length)].sort((a, b) => a - b),
+        etoiles: [...favE, ...piocher(paquets.e, M, favE, J - favE.length)].sort((a, b) => a - b),
+      };
+      const cle = g.numeros.join('-') + '|' + g.etoiles.join('-');
+      if (++essais > nombre * 1000) throw new Error('impossible de produire autant de grilles différentes');
+      if (vues.has(cle)) continue;
+      vues.add(cle);
+      res.push(g);
+    }
+    return res;
+  }
+  function generer(strategie, nombre, favN, favE, dernier) {
+    if (strategie === 'couverture') return genererCouverture(nombre, favN, favE);
+    const res = [], vues = new Set();
+    let essais = 0;
+    while (res.length < nombre) {
+      const g = genererUne(strategie, favN, favE, dernier);
+      const cle = g.numeros.join('-') + '|' + g.etoiles.join('-');
+      if (++essais > nombre * 1000) throw new Error('impossible de produire autant de grilles différentes avec ces numéros fétiches');
+      if (vues.has(cle)) continue;
+      vues.add(cle);
+      res.push(g);
+    }
+    return res;
+  }
+
+  /* ================= Espérance de gain ================= */
+  const estimerVentes = j => Math.exp(C.ventesA + C.ventesB * Math.log(Math.max(j, 1)));
+  const partMoyenne = l => (l < 1e-9 ? 1 - l / 2 : -Math.expm1(-l) / l);
+  function esperance({ jackpot, ventes = null, codes = null, situation = 'normal', etoilePlus = false, indicePop = 1, sansPlafond = false }) {
+    if (!sansPlafond && jackpot > C.plafond) throw new Error('le jackpot ne peut pas dépasser le plafond');
+    if (situation === 'plafond' && jackpot < C.plafond) throw new Error('la situation « plafond » suppose un jackpot égal au plafond');
+    const s = ventes ?? estimerVentes(jackpot);
+    const cd = codes ?? C.partFrance * s;
+    const m = masse(TABLE);
+    const part213 = TABLE.rangs.filter(r => r.numero > 1).reduce((a, r) => a + r.part, 0);
+    const rangs = m * part213;
+    const excedent = situation !== 'normal' ? m * C.partRang1Apres : 0;
+    const p = 1 / TOTAL;
+    const lam = (s - 1) * p * indicePop;
+    const part = partMoyenne(lam);
+    const jack = situation === 'doit-etre-gagne' ? jackpot / s : jackpot * p * part;
+    const mm = C.myMillionGain / cd;
+    const ep = etoilePlus ? masse(EP) : 0;
+    const mise = JEU.prixGrille + (etoilePlus ? EP.mise : 0);
+    const total = rangs + excedent + jack + mm + ep;
+    return { jackpot, ventes: s, codes: cd, rangs, excedent, jack, mm, ep, mise, total, taux: total / mise, part, partage: -Math.expm1(-lam) };
+  }
+  function jackpotRentable(opts = {}) {
+    const ecart = j => { const e = esperance({ ...opts, jackpot: j, situation: 'normal', sansPlafond: true }); return e.total - e.mise; };
+    let bas = 1e6, haut = 1e12;
+    if (ecart(haut) < 0) return null;
+    if (ecart(bas) >= 0) return bas;
+    for (let i = 0; i < 200; i++) {
+      const milieu = Math.sqrt(bas * haut);
+      if (ecart(milieu) >= 0) haut = milieu; else bas = milieu;
+      if (haut / bas < 1 + 1e-9) break;
+    }
+    return haut;
+  }
+
+  /* ================= Simulation ================= */
+  function poisson(l) {
+    if (l <= 0) return 0;
+    if (l > 30) return Math.max(0, Math.round(l + Math.sqrt(l) * Math.sqrt(-2 * Math.log(Math.random() || 1e-12)) * Math.cos(2 * Math.PI * Math.random())));
+    const seuil = Math.exp(-l);
+    let k = 0, prod = Math.random();
+    while (prod > seuil) { k++; prod *= Math.random(); }
+    return k;
+  }
+  function simuler({ annees, grilles, joueurs = 1000, etoilePlus = false, jackpot = C.jackpotMoyen, codes = C.codesMyMillion }) {
+    const tirages = Math.max(1, Math.round(annees * 52.1775 * JEU.joursTirage.length));
+    const parJoueur = tirages * grilles;
+    joueurs = Math.max(50, Math.min(joueurs, Math.floor(2e7 / parJoueur)));
+    const cumul = [], gains = [], rangsEM = [], rangsEP = [];
+    let tot = 0;
+    for (let a = 0; a <= K; a++) for (let b = 0; b <= J; b++) {
+      tot += nbCorr(a, b);
+      cumul.push(tot);
+      const r = rangPour(TABLE, a, b);
+      const r2 = etoilePlus ? rangPour(EP, a, b) : null;
+      let g = 0;
+      if (r) g += r.numero === 1 ? jackpot : gainMoyen(r, TABLE);
+      if (r2) g += gainMoyen(r2, EP);
+      gains.push(g);
+      rangsEM.push(r ? r.numero : 0);
+      rangsEP.push(r2 ? r2.numero : 0);
+    }
+    const prix = JEU.prixGrille + (etoilePlus ? EP.mise : 0);
+    const comptes = new Array(cumul.length).fill(0);
+    const bilans = new Float64Array(joueurs);
+    let myMillion = 0;
+    for (let j = 0; j < joueurs; j++) {
+      let somme = 0;
+      for (let i = 0; i < parJoueur; i++) {
+        const u = Math.random() * tot;
+        let k = 0;
+        while (cumul[k] <= u) k++;
+        comptes[k]++;
+        somme += gains[k];
+      }
+      const mm = poisson(parJoueur / codes);
+      myMillion += mm;
+      bilans[j] = somme + mm * C.myMillionGain;
+    }
+    const tries = Array.from(bilans).sort((a, b) => a - b);
+    const mediane = tries.length % 2 ? tries[(tries.length - 1) / 2] : (tries[tries.length / 2 - 1] + tries[tries.length / 2]) / 2;
+    const mise = prix * parJoueur;
+    const victoires = new Map();
+    comptes.forEach((n, k) => { if (n && rangsEM[k]) victoires.set(rangsEM[k], (victoires.get(rangsEM[k]) || 0) + n); });
+    return {
+      joueurs, tirages, mise, moyenne: tries.reduce((a, b) => a + b, 0) / joueurs, mediane,
+      gagnants: tries.filter(x => x > mise).length / joueurs, meilleur: tries[tries.length - 1],
+      jackpots: victoires.get(1) || 0, myMillion, victoires,
+    };
+  }
+
+  /* ================= Statistiques ================= */
+  function lgamma(z) {
+    const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+      12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lgamma(1 - z);
+    z -= 1;
+    let x = c[0];
+    for (let i = 1; i < 9; i++) x += c[i] / (z + i);
+    const t = z + 7.5;
+    return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+  }
+  function gammaSup(a, x) {
+    if (x === 0) return 1;
+    const pre = Math.exp(-x + a * Math.log(x) - lgamma(a));
+    if (x < a + 1) {
+      let terme = 1 / a, somme = terme, n = a;
+      for (let i = 0; i < 100000; i++) { n += 1; terme *= x / n; somme += terme; if (Math.abs(terme) < Math.abs(somme) * 1e-16) break; }
+      return Math.min(1, Math.max(0, 1 - somme * pre));
+    }
+    const petit = 1e-300;
+    let b = x + 1 - a, c = 1 / petit, d = 1 / b, h = d;
+    for (let i = 1; i < 100000; i++) {
+      const an = -i * (i - a);
+      b += 2;
+      d = an * d + b; if (Math.abs(d) < petit) d = petit;
+      c = b + an / c; if (Math.abs(c) < petit) c = petit;
+      d = 1 / d;
+      const delta = d * c;
+      h *= delta;
+      if (Math.abs(delta - 1) < 1e-16) break;
+    }
+    return Math.min(1, Math.max(0, pre * h));
+  }
+  const pValeurKhi2 = (x, ddl) => gammaSup(ddl / 2, Math.max(0, x) / 2);
+  function khi2(comptes, nbValeurs, parTirage, nbTirages) {
+    const attendu = (nbTirages * parTirage) / nbValeurs;
+    let pearson = 0;
+    for (let v = 1; v <= nbValeurs; v++) pearson += ((comptes[v] || 0) - attendu) ** 2 / attendu;
+    const stat = (pearson * (nbValeurs - 1)) / (nbValeurs - parTirage);
+    return { statistique: stat, ddl: nbValeurs - 1, p: pValeurKhi2(stat, nbValeurs - 1), attendu };
+  }
+  function statsValeurs(histo, etoiles) {
+    const max = etoiles ? M : N;
+    const sorties = new Array(max + 1).fill(0), dernier = new Array(max + 1).fill(-1);
+    histo.forEach((t, i) => { for (const v of etoiles ? t.etoiles : t.numeros) { sorties[v]++; dernier[v] = i; } });
+    return plage(max).map(v => ({ valeur: v, sorties: sorties[v], ecart: histo.length - dernier[v] - 1 }));
+  }
+
+  /* ================= Rétro-test ================= */
+  function partSiGagnant(rapport, gagnants, ajout) {
+    if (rapport <= 0) return null;
+    if (gagnants <= 0) return rapport * ajout;
+    return (rapport * gagnants) / (gagnants + ajout) * ajout;
+  }
+  function retro(numeros, etoiles, histo, etoilePlus) {
+    const n = numeros.length, e = etoiles.length;
+    const prix = JEU.prixGrille + (etoilePlus ? EP.mise : 0);
+    const gains = [];
+    for (const t of histo) {
+      const a = numeros.filter(x => t.numeros.includes(x)).length;
+      const b = etoiles.filter(x => t.etoiles.includes(x)).length;
+      for (const [rang, nombre] of repartition(n, e, a, b, TABLE)) gains.push({ date: t.date, jeu: 'EuroMillions', rang, nombre, montant: partSiGagnant(t.rapports[rang - 1], t.gagnants[rang - 1], nombre) });
+      if (etoilePlus) for (const [rang, nombre] of repartition(n, e, a, b, EP)) gains.push({ date: t.date, jeu: 'Étoile+', rang, nombre, montant: partSiGagnant(t.rapportsEP[rang - 1], t.gagnantsEP[rang - 1], nombre) });
+    }
+    const total = gains.reduce((s, g) => s + (g.montant || 0), 0);
+    const mise = prix * nbSimples(n, e) * histo.length;
+    return { gains, total, mise, taux: mise ? total / mise : 0, inconnus: gains.filter(g => g.montant === null) };
+  }
+
+  /* ================= Lecture d'une combinaison saisie ================= */
+  const SEPARATEUR = /[+/|*★☆]|étoiles?|etoiles?/i;
+  function lireCombinaison(texte) {
+    const m = SEPARATEUR.exec(texte);
+    let numeros, etoiles;
+    if (m) {
+      numeros = (texte.slice(0, m.index).match(/\d+/g) || []).map(Number);
+      etoiles = (texte.slice(m.index + m[0].length).match(/\d+/g) || []).map(Number);
+    } else {
+      const tout = (texte.match(/\d+/g) || []).map(Number);
+      if (tout.length !== K + J) throw new Error('séparez les numéros des étoiles par « + » (ex. 3 5 37 44 49 + 5 6)');
+      numeros = tout.slice(0, K);
+      etoiles = tout.slice(K);
+    }
+    if (numeros.length !== K || etoiles.length !== J) throw new Error(`un tirage comporte ${K} numéros et ${J} étoiles`);
+    if (numeros.some(v => v < 1 || v > N) || etoiles.some(v => v < 1 || v > M)) throw new Error(`numéros de 1 à ${N}, étoiles de 1 à ${M}`);
+    if (new Set(numeros).size !== K || new Set(etoiles).size !== J) throw new Error('numéro ou étoile en double');
+    return { numeros: numeros.sort((a, b) => a - b), etoiles: etoiles.sort((a, b) => a - b) };
+  }
+
+  /* ================= État de l'interface ================= */
+  const CLE_STOCKAGE = 'calculateur-euromillions-v1';
+  const etat = {
+    vue: 'grille', numeros: [], etoiles: [], tirage: '', tirageManuel: '', etoilePlus: false,
+    strategie: 'anti-partage', nbGrilles: 5, favN: '', favE: '', multN: 6, multE: 3, tableauEP: false,
+    jackpot: 50, situation: 'normal', espEP: false, espGrille: false, simAnnees: 10, simGrilles: 1,
+  };
+  try { Object.assign(etat, JSON.parse(localStorage.getItem(CLE_STOCKAGE) || '{}')); } catch (_) { /* stockage indisponible */ }
+  const sauver = () => { try { localStorage.setItem(CLE_STOCKAGE, JSON.stringify(etat)); } catch (_) { /* stockage indisponible */ } };
+  etat.numeros = etat.numeros.filter(v => v >= 1 && v <= N).slice(0, JEU.multipleNumerosMax);
+  etat.etoiles = etat.etoiles.filter(v => v >= 1 && v <= M).slice(0, JEU.multipleBonusMax);
+
+  const dernierTirage = () => (HISTO.length ? HISTO[HISTO.length - 1] : null);
+  const boulesHtml = (valeurs, trouves = [], etoiles = false) =>
+    valeurs.map(v => `<span class="mini${etoiles ? ' etoile-mini' : ''}${trouves.includes(v) ? ' trouve' : ''}">${v}</span>`).join('');
+  const combinaisonHtml = (g, tirage) =>
+    `<span class="tirage-ligne">${boulesHtml(g.numeros, tirage ? tirage.numeros : [])}<span class="plus">+</span>${boulesHtml(g.etoiles, tirage ? tirage.etoiles : [], true)}</span>`;
+  const texteGrille = g => `${g.numeros.map(deux).join(' ')} + ${g.etoiles.map(deux).join(' ')}`;
+
+  function messageCopie(texte) {
+    const el = $('#message-copie');
+    el.textContent = texte;
+    el.hidden = false;
+    clearTimeout(messageCopie.minuteur);
+    messageCopie.minuteur = setTimeout(() => { el.hidden = true; }, 2200);
+  }
+  function copier(texte) {
+    const secours = () => {
+      const zone = document.createElement('textarea');
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+      zone.remove();
+      messageCopie(ok ? 'Copié' : 'Copie impossible : sélectionnez le texte');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(() => messageCopie('Copié'), secours);
+    else secours();
+  }
+
+  /* ================= Vue : Ma grille ================= */
+  const ETOILE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.6l-6.3 3.6 1.5-7.1L1.8 9.2 9 8.4z"/></svg>';
+  function construireBulletin() {
+    $('#bulletin-numeros').innerHTML = plage(N).map(v => `<button type="button" class="boule" data-numero="${v}" aria-pressed="false" aria-label="Numéro ${v}">${v}</button>`).join('');
+    $('#bulletin-etoiles').innerHTML = plage(M).map(v => `<button type="button" class="etoile" data-etoile="${v}" aria-pressed="false" aria-label="Étoile ${v}">${ETOILE_SVG}<span>${v}</span></button>`).join('');
+  }
+  function basculer(liste, valeur, max) {
+    const i = liste.indexOf(valeur);
+    if (i >= 0) liste.splice(i, 1);
+    else if (liste.length < max) liste.push(valeur);
+    else return false;
+    liste.sort((a, b) => a - b);
+    return true;
+  }
+  function etatGrille() {
+    const n = etat.numeros.length, e = etat.etoiles.length;
+    if (n < K || e < J) return { complete: false, message: `Encore ${n < K ? pluriel(K - n, 'numéro', 'numéros') : ''}${n < K && e < J ? ' et ' : ''}${e < J ? pluriel(J - e, 'étoile', 'étoiles') : ''} à cocher.` };
+    const err = erreurMultiple(n, e);
+    if (err) return { complete: false, erreur: true, message: `Multiple non proposée : ${err}.` };
+    return { complete: true, simples: nbSimples(n, e) };
+  }
+  function rendreBulletin() {
+    for (const b of document.querySelectorAll('#bulletin-numeros .boule')) b.setAttribute('aria-pressed', etat.numeros.includes(Number(b.dataset.numero)) ? 'true' : 'false');
+    for (const b of document.querySelectorAll('#bulletin-etoiles .etoile')) b.setAttribute('aria-pressed', etat.etoiles.includes(Number(b.dataset.etoile)) ? 'true' : 'false');
+    const g = etatGrille();
+    const n = etat.numeros.length, e = etat.etoiles.length;
+    $('#compteur').innerHTML = `<span class="pastille${n >= K ? ' ok' : ''}">${n} numéro${n > 1 ? 's' : ''}</span><span class="pastille${e >= J ? ' or' : ''}">${e} étoile${e > 1 ? 's' : ''}</span>`;
+    const cout = $('#cout-grille');
+    if (g.complete) {
+      const prix = g.simples * (JEU.prixGrille + (etat.etoilePlus ? EP.mise : 0));
+      cout.textContent = g.simples === 1
+        ? `Grille simple : ${euros(prix)} par tirage${etat.etoilePlus ? ' avec Étoile+' : ''}.`
+        : `Grille multiple : ${entier(g.simples)} grilles simples, ${euros(prix)} par tirage${etat.etoilePlus ? ' avec Étoile+' : ''}.`;
+      cout.className = 'discret';
+    } else {
+      cout.textContent = g.message;
+      cout.className = g.erreur ? 'erreur' : 'discret';
+    }
+  }
+  function tirageChoisi() {
+    if (etat.tirage === 'manuel') {
+      if (!etat.tirageManuel.trim()) return { attente: true };
+      try { return { combinaison: lireCombinaison(etat.tirageManuel), manuel: true }; } catch (err) { return { erreur: err.message }; }
+    }
+    if (!HISTO.length) return { attente: true };
+    const t = HISTO.find(x => x.date === etat.tirage) || dernierTirage();
+    return { combinaison: t, officiel: t };
+  }
+  function rendreTirage() {
+    const zone = $('#resultat-tirage');
+    $('#zone-tirage-manuel').hidden = etat.tirage !== 'manuel';
+    const g = etatGrille();
+    if (!g.complete) { zone.innerHTML = `<p class="discret">Cochez votre grille pour la comparer au tirage.</p>`; return; }
+    const choix = tirageChoisi();
+    if (choix.attente) { zone.innerHTML = `<p class="discret">Saisissez la combinaison gagnante du tirage.</p>`; return; }
+    if (choix.erreur) { zone.innerHTML = `<p class="erreur">Tirage illisible : ${echapper(choix.erreur)}.</p>`; return; }
+    const t = choix.combinaison;
+    const a = etat.numeros.filter(x => t.numeros.includes(x)).length;
+    const b = etat.etoiles.filter(x => t.etoiles.includes(x)).length;
+    const tables = [TABLE].concat(etat.etoilePlus ? [EP] : []);
+    const lignes = [];
+    let total = 0, inconnu = false, meilleur = null;
+    for (const table of tables) {
+      for (const [rang, nombre] of repartition(etat.numeros.length, etat.etoiles.length, a, b, table)) {
+        const r = rangNumero(table, rang);
+        let montant = null, source = '';
+        if (choix.officiel) {
+          const rapport = table === EP ? choix.officiel.rapportsEP[rang - 1] : choix.officiel.rapports[rang - 1];
+          if (rapport > 0) { montant = rapport * nombre; source = 'rapport officiel'; } else source = 'aucun gagnant officiel ce jour-là';
+        } else {
+          const moy = gainMoyen(r, table);
+          if (moy !== null) { montant = moy * nombre; source = 'gain moyen estimé'; } else source = 'montant variable';
+        }
+        if (montant === null) inconnu = true; else total += montant;
+        if (table === TABLE && (meilleur === null || rang < meilleur)) meilleur = rang;
+        lignes.push(`<li><span>${table.nom} rang ${rang} · ${libelleRang(r)}${nombre > 1 ? ` · ${nombre} grilles` : ''}</span><span>${montant === null ? echapper(source) : euros(montant)}</span></li>`);
+      }
+    }
+    const prix = nbSimples(etat.numeros.length, etat.etoiles.length) * (JEU.prixGrille + (etat.etoilePlus ? EP.mise : 0));
+    const titre = choix.officiel ? `Tirage du ${dateLongue(choix.officiel.date)}` : 'Tirage saisi';
+    let verdict;
+    if (lignes.length) {
+      const resume = meilleur === 1 ? 'Jackpot !' : meilleur ? `Gagné : rang ${meilleur}` : 'Gagné à l\'Étoile+';
+      verdict = `<div class="verdict gagne"><strong>${resume}</strong><span>${a} bon${a > 1 ? 's' : ''} numéro${a > 1 ? 's' : ''} et ${libelleEtoiles(b)} · total ${euros(total)}${inconnu ? ' (hors montants non publiés)' : ''} pour ${euros(prix)} misés</span></div>`;
+    } else {
+      verdict = `<div class="verdict"><strong>Pas de gain</strong><span>${a} bon${a > 1 ? 's' : ''} numéro${a > 1 ? 's' : ''} et ${libelleEtoiles(b)}. Il faut au moins 2 bons numéros, ou 1 numéro et 2 étoiles${etat.etoilePlus ? ' (à l\'Étoile+ : une étoile suffit avec 0 numéro)' : ''}.</span></div>`;
+    }
+    zone.innerHTML = `<p class="etiquette">${titre}</p>${combinaisonHtml(t)}${verdict}${lignes.length ? `<ul class="liste-gains">${lignes.join('')}</ul>` : ''}<p class="discret">Votre grille : ${combinaisonHtml({ numeros: etat.numeros, etoiles: etat.etoiles }, t)}</p>`;
+  }
+  function rendreRetro() {
+    const zone = $('#resultat-retro');
+    const g = etatGrille();
+    if (!HISTO.length) { zone.innerHTML = `<p class="discret">${historiqueCharge ? "L'historique des tirages n'a pas pu être chargé." : 'Chargement des tirages…'}</p>`; return; }
+    if (!g.complete) { zone.innerHTML = `<p class="discret">Cochez votre grille : elle sera rejouée sur les ${entier(HISTO.length)} tirages réels depuis le ${dateCourte(HISTO[0].date)}.</p>`; return; }
+    const r = retro(etat.numeros, etat.etoiles, HISTO, etat.etoilePlus);
+    const bilan = r.total - r.mise;
+    const parRang = new Map();
+    for (const x of r.gains) {
+      const cle = `${x.jeu}|${x.rang}`;
+      const v = parRang.get(cle) || { jeu: x.jeu, rang: x.rang, nombre: 0, montant: 0 };
+      v.nombre += x.nombre; v.montant += x.montant || 0;
+      parRang.set(cle, v);
+    }
+    const lignes = [...parRang.values()].sort((p, q) => (p.jeu === q.jeu ? p.rang - q.rang : p.jeu === 'EuroMillions' ? -1 : 1))
+      .map(v => `<tr><td class="g">${v.jeu} rang ${v.rang}</td><td class="c">${libelleRang(rangNumero(v.jeu === 'EuroMillions' ? TABLE : EP, v.rang))}</td><td>${entier(v.nombre)}</td><td>${euros(v.montant)}</td></tr>`).join('');
+    const meilleurs = r.gains.filter(x => x.montant !== null).sort((p, q) => q.montant - p.montant).slice(0, 3);
+    zone.innerHTML = `
+      <div class="chiffres">
+        <div class="chiffre"><span class="discret">Misé</span><b>${euros(r.mise, 0)}</b></div>
+        <div class="chiffre"><span class="discret">Gagné</span><b>${euros(r.total, 0)}</b></div>
+        <div class="chiffre ${bilan >= 0 ? 'bon' : 'mauvais'}"><span class="discret">Bilan</span><b>${bilan >= 0 ? '+' : '−'}${euros(Math.abs(bilan), 0)}</b></div>
+      </div>
+      <p class="discret">Sur ${entier(HISTO.length)} tirages du ${dateCourte(HISTO[0].date)} au ${dateCourte(HISTO[HISTO.length - 1].date)}, vous auriez récupéré ${pourcentage(r.taux)} de vos mises${etat.etoilePlus ? ', Étoile+ comprise' : ''}.</p>
+      ${lignes ? `<div class="defile"><table><thead><tr><th>Rang</th><th class="g">Combinaison</th><th>Fois</th><th>Montant</th></tr></thead><tbody>${lignes}</tbody></table></div>` : ''}
+      ${r.inconnus.map(x => `<p class="discret">Le ${dateCourte(x.date)}, ${x.jeu} rang ${x.rang} atteint, mais personne ne l'a gagné ce jour-là : montant non publié, non compté.</p>`).join('')}
+      ${meilleurs.length ? `<p class="discret">Meilleurs gains : ${meilleurs.map(x => `${euros(x.montant)} le ${dateCourte(x.date)}`).join(' · ')}</p>` : ''}
+      <p class="discret">Montants : rapports officiels, ajustés comme si vous aviez été un gagnant de plus.</p>`;
+  }
+  function rendreAnalyse() {
+    const zone = $('#resultat-analyse');
+    const g = etatGrille();
+    if (!g.complete) { zone.innerHTML = `<p class="discret">Cochez votre grille pour voir si elle ressemble à celles des autres joueurs.</p>`; return; }
+    if (g.simples > 1) { zone.innerHTML = `<p class="discret">L'analyse porte sur une grille simple (5 numéros et 2 étoiles).</p>`; return; }
+    const nums = etat.numeros, dernier = dernierTirage();
+    const somme = nums.reduce((s, v) => s + v, 0);
+    const centile = SOMMES[somme] / SOMMES[SOMMES.length - 1];
+    const pairs = nums.filter(v => v % 2 === 0).length;
+    const ind = indice(nums, etat.etoiles);
+    const mot = motifs(nums, dernier);
+    let lecture = '';
+    if (ind !== null) {
+      lecture = ind < 0.7 ? 'Grille peu jouée : en cas de gain, vous auriez moins de co-gagnants que la moyenne.'
+        : ind > 1.4 ? 'Grille très jouée : en cas de gain, il faudrait probablement partager avec plus de monde.'
+          : 'Grille de popularité moyenne.';
+    }
+    zone.innerHTML = `
+      <div class="chiffres">
+        ${ind !== null ? `<div class="chiffre ${ind < 0.7 ? 'bon' : ind > 1.4 ? 'mauvais' : ''}"><span class="discret">Popularité</span><b>${decimal(ind, 2)} ×</b><span class="discret">1,00 = moyenne</span></div>` : ''}
+        <div class="chiffre"><span class="discret">Somme des numéros</span><b>${somme}</b><span class="discret">plus haute que ${pctFixe(centile, 0)} des grilles</span></div>
+        <div class="chiffre"><span class="discret">Pairs / impairs</span><b>${pairs} / ${K - pairs}</b></div>
+      </div>
+      ${lecture ? `<p>${lecture}</p>` : ''}
+      ${mot.length ? `<div class="motifs">${mot.map(m => `<span class="pastille alerte">${echapper(m)}</span>`).join('')}</div><p class="discret">Ces motifs sont choisis par beaucoup de joueurs : ils ne changent pas vos chances, mais augmentent le partage.</p>` : `<p class="discret">Aucun motif très joué (dates, suites, même finale…).</p>`}
+      <p class="discret">Votre probabilité de gagner reste exactement ${chances(1 / TOTAL)}, comme pour toute autre grille.</p>`;
+  }
+  function remplirChoixTirage() {
+    const sel = $('#choix-tirage');
+    if (!HISTO.length && !historiqueCharge) {
+      sel.innerHTML = '<option value="">Chargement des tirages…</option>';
+      return;
+    }
+    if (!HISTO.length) {
+      sel.innerHTML = '<option value="manuel">Saisir un tirage</option>';
+      etat.tirage = 'manuel';
+    } else {
+      const annees = new Map();
+      for (let i = HISTO.length - 1; i >= 0; i--) {
+        const t = HISTO[i], an = t.date.slice(0, 4);
+        if (!annees.has(an)) annees.set(an, []);
+        annees.get(an).push(`<option value="${t.date}">${dateLongue(t.date)}</option>`);
+      }
+      sel.innerHTML = `<option value="">Dernier tirage : ${dateLongue(dernierTirage().date)}</option><option value="manuel">Autre tirage (saisie)</option>`
+        + [...annees.entries()].map(([an, opts]) => `<optgroup label="${an}">${opts.join('')}</optgroup>`).join('');
+    }
+    sel.value = etat.tirage;
+    if (sel.value !== etat.tirage) { etat.tirage = ''; sel.value = ''; }
+    $('#tirage-manuel').value = etat.tirageManuel;
+  }
+  function rendreVueGrille() { rendreBulletin(); rendreTirage(); rendreRetro(); rendreAnalyse(); }
+
+  /* ================= Vue : Générer ================= */
+  let grillesGenerees = [];
+  function actionGenerer() {
+    const err = $('#erreur-generer');
+    err.hidden = true;
+    try {
+      const favN = lireFavoris(etat.favN, N, 'numéros');
+      const favE = lireFavoris(etat.favE, M, 'étoiles');
+      grillesGenerees = generer(etat.strategie, etat.nbGrilles, favN, favE, dernierTirage());
+    } catch (e) {
+      err.textContent = `Impossible de générer : ${e.message}.`;
+      err.hidden = false;
+      return;
+    }
+    rendreGenerer();
+  }
+  function rendreGenerer() {
+    $('#nb-grilles-valeur').textContent = etat.nbGrilles;
+    const liste = $('#grilles-generees');
+    $('#btn-copier-tout').hidden = !grillesGenerees.length;
+    liste.innerHTML = grillesGenerees.map((g, i) => {
+      const ind = indice(g.numeros, g.etoiles);
+      return `<li>${combinaisonHtml(g)}<span class="actions">${ind !== null ? `<span class="pastille ${ind < 0.7 ? 'ok' : ind > 1.4 ? 'alerte' : ''}" title="Popularité : 1,00 = grille moyenne">popularité ${decimal(ind, 2)}</span>` : ''}<button type="button" class="bouton petit" data-verifier="${i}">Vérifier</button></span></li>`;
+    }).join('');
+    $('#note-generer').textContent = grillesGenerees.length && POP
+      ? 'Popularité : nombre de grilles identiques attendues chez les autres joueurs, par rapport à une grille moyenne (1,00). À 0,50, un gain serait en moyenne deux fois moins partagé.'
+      : '';
+  }
+
+  /* ================= Vue : Chances ================= */
+  function rendreChances() {
+    $('#combinaisons').textContent = `${entier(TOTAL)} combinaisons possibles`;
+    const pJackpot = 1 / TOTAL, pGain = probaGain(TABLE);
+    const parSemaine = JEU.joursTirage.length;
+    const attente = 1 / pJackpot / parSemaine / 52.1775;
+    $('#chiffres-chances').innerHTML = `
+      <div class="chiffre"><span class="discret">Jackpot (5 + 2)</span><b>${chances(pJackpot)}</b></div>
+      <div class="chiffre"><span class="discret">Gagner quelque chose</span><b>${chances(pGain, 2)}</b></div>
+      <div class="chiffre"><span class="discret">Attente moyenne du jackpot</span><b>${entier(attente)} ans</b><span class="discret">avec 1 grille à chaque tirage</span></div>
+      <div class="chiffre"><span class="discret">Étoile+ seule</span><b>${chances(probaGain(EP), 2)}</b></div>`;
+    const tables = [TABLE].concat(etat.tableauEP ? [EP] : []);
+    $('#tableau-rangs').innerHTML = tables.map(table => {
+      const lignes = table.rangs.map(r => {
+        const p = probaRang(r), gm = gainMoyen(r, table);
+        const gain = table === TABLE && r.numero === 1 ? 'jackpot' : gm === null ? '—' : euros(gm, gm >= 100 ? 0 : 2);
+        return `<tr><td class="g">${table === EP ? 'Étoile+ ' : ''}${r.numero}</td><td class="g">${libelleRang(r)}</td><td>${chances(p)}</td><td>${pourcentage(p)}</td><td>${gain}</td></tr>`;
+      }).join('');
+      return `<thead><tr><th>${table === EP ? 'Rang Étoile+' : 'Rang'}</th><th class="g">Combinaison</th><th>Chances</th><th>Probabilité</th><th>Gain moyen</th></tr></thead><tbody>${lignes}</tbody>`;
+    }).join('');
+    rendreMultiple();
+  }
+  function remplirMultiples() {
+    $('#mult-numeros').innerHTML = plage(JEU.multipleNumerosMax - K + 1).map(i => `<option value="${K + i - 1}">${K + i - 1} numéros</option>`).join('');
+    $('#mult-etoiles').innerHTML = plage(JEU.multipleBonusMax - J + 1).map(i => `<option value="${J + i - 1}">${J + i - 1} étoiles</option>`).join('');
+    $('#mult-numeros').value = etat.multN;
+    $('#mult-etoiles').value = etat.multE;
+  }
+  function rendreMultiple() {
+    const zone = $('#resultat-multiple');
+    const n = Number(etat.multN), e = Number(etat.multE);
+    const err = erreurMultiple(n, e);
+    if (err) { zone.innerHTML = `<p class="erreur">Combinaison non proposée : ${err}.</p>`; return; }
+    const a = analyseMultiple(n, e);
+    const cout = a.nbSimples * JEU.prixGrille, coutEP = a.nbSimples * (JEU.prixGrille + EP.mise);
+    const scen = a.scenarios.filter(s => s.gains.size).sort((p, q) => q.a - p.a || q.b - p.b);
+    zone.innerHTML = `
+      <div class="chiffres">
+        <div class="chiffre"><span class="discret">Grilles simples</span><b>${entier(a.nbSimples)}</b></div>
+        <div class="chiffre"><span class="discret">Prix par tirage</span><b>${euros(cout)}</b><span class="discret">${euros(coutEP)} avec Étoile+</span></div>
+        <div class="chiffre"><span class="discret">Gagner au moins un rang</span><b>${chances(a.pGain, 2)}</b></div>
+        <div class="chiffre"><span class="discret">Au moins un jackpot</span><b>${chances(a.auMoinsUn.get(1) || 0)}</b></div>
+      </div>
+      <div class="defile"><table><thead><tr><th class="g">Si le tirage contient</th><th>Chances</th><th class="g">Grilles gagnantes</th></tr></thead><tbody>
+        ${scen.map(s => `<tr><td class="g">${libelleCorr(s.a, s.b)} de votre multiple</td><td>${chances(s.p)}</td><td class="c">${[...s.gains.entries()].map(([r, k]) => `${k} × rang ${r}`).join(', ')}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  /* ================= Vue : Rentabilité ================= */
+  function rendreEsperance() {
+    const zone = $('#resultat-esperance');
+    if (etat.situation !== 'normal') etat.jackpot = C.plafond / 1e6;
+    $('#jackpot').value = etat.jackpot;
+    $('#jackpot').disabled = etat.situation !== 'normal';
+    $('#jackpot-valeur').textContent = eurosCompacts(etat.jackpot * 1e6);
+    let indicePop = 1, noteGrille = '';
+    if (etat.espGrille) {
+      const g = etatGrille();
+      if (g.complete && g.simples === 1 && POP) { indicePop = indice(etat.numeros, etat.etoiles); noteGrille = `Popularité de votre grille : ${decimal(indicePop, 2)}.`; }
+      else noteGrille = 'Cochez une grille simple dans « Ma grille » pour tenir compte de sa popularité.';
+    }
+    const e = esperance({ jackpot: etat.jackpot * 1e6, situation: etat.situation, etoilePlus: etat.espEP, indicePop });
+    const echelle = Math.max(e.mise, e.total);
+    const seg = (v, cls) => (v > 0 ? `<span class="${cls}" style="width:${(v / echelle) * 100}%"></span>` : '');
+    const seuil = jackpotRentable({ etoilePlus: etat.espEP, indicePop });
+    const phraseSeuil = seuil === null ? 'Aucun jackpot, même illimité, ne rendrait le jeu rentable.'
+      : seuil > C.plafond ? `Il faudrait un jackpot d'environ ${eurosCompacts(Math.round(seuil / 1e6) * 1e6)} pour rentrer dans ses frais, au-delà du plafond de ${eurosCompacts(C.plafond)} : un tirage ordinaire n'est jamais rentable.`
+        : `Seuil de rentabilité théorique : environ ${eurosCompacts(Math.round(seuil / 1e6) * 1e6)}.`;
+    zone.innerHTML = `
+      <div><span class="etiquette">Récupéré en moyenne</span>
+        <p class="grand-nombre">${euros(e.total)} <span class="discret" style="font-size:1rem">pour ${euros(e.mise)} misés</span></p>
+        <p>${e.taux < 1 ? `Soit ${pctFixe(e.taux)} de la mise : une perte moyenne de ${euros(e.mise - e.total)} par grille.` : `Soit ${pctFixe(e.taux)} de la mise : situation exceptionnelle, mais vos chances ne changent pas et vous perdrez presque toujours votre mise.`}</p>
+      </div>
+      <div class="jauge" role="img" aria-label="Décomposition de l'espérance">${seg(e.rangs, 'c-rangs')}${seg(e.excedent, 'c-plafond')}${seg(e.jack, 'c-jackpot')}${seg(e.mm, 'c-mm')}${seg(e.ep, 'c-ep')}</div>
+      <div class="legende">
+        <span><i class="c-rangs"></i>Rangs 2 à 13 : ${euros(e.rangs)}</span>
+        ${e.excedent ? `<span><i class="c-plafond"></i>Excédent reversé au rang 2 : ${euros(e.excedent)}</span>` : ''}
+        <span><i class="c-jackpot"></i>Jackpot : ${euros(e.jack)}</span>
+        <span><i class="c-mm"></i>My Million : ${euros(e.mm)}</span>
+        ${e.ep ? `<span><i class="c-ep"></i>Étoile+ : ${euros(e.ep)}</span>` : ''}
+      </div>
+      <p class="discret">Hypothèses : ${sansZeros(decimal(e.ventes / 1e6, 1))} millions de grilles jouées en Europe (estimées d'après les tirages 2020-2026), dont ${sansZeros(decimal(e.codes / 1e6, 1))} millions en France pour My Million.${etat.situation !== 'doit-etre-gagne' ? ` Si vous gagnez le jackpot, risque de le partager : ${pctFixe(e.partage)}.` : ''} ${noteGrille}</p>
+      ${etat.situation === 'normal' ? `<p>${phraseSeuil}</p>` : ''}`;
+  }
+  function actionSimuler() {
+    const zone = $('#resultat-simulation');
+    zone.innerHTML = '<p class="discret">Simulation en cours…</p>';
+    setTimeout(() => {
+      const r = simuler({ annees: Number(etat.simAnnees), grilles: Number(etat.simGrilles), etoilePlus: etat.espEP });
+      const detail = [...r.victoires.entries()].sort((p, q) => p[0] - q[0]).map(([rang, n]) => `rang ${rang} : ${entier(n)}`).join(' · ');
+      zone.innerHTML = `
+        <div class="chiffres">
+          <div class="chiffre"><span class="discret">Misé par joueur</span><b>${euros(r.mise, 0)}</b></div>
+          <div class="chiffre mauvais"><span class="discret">Récupéré (joueur médian)</span><b>${euros(r.mediane, 0)}</b><span class="discret">${pctFixe(r.mediane / r.mise)} de la mise</span></div>
+          <div class="chiffre"><span class="discret">Joueurs gagnants</span><b>${pctFixe(r.gagnants)}</b><span class="discret">sur ${entier(r.joueurs)}</span></div>
+        </div>
+        <p class="discret">${entier(r.joueurs)} joueurs, ${pluriel(r.tirages, 'tirage', 'tirages')} chacun${etat.espEP ? ', avec Étoile+' : ''}. Meilleur bilan : ${euros(r.meilleur, 0)}. Jackpots gagnés : ${entier(r.jackpots)}, codes My Million : ${entier(r.myMillion)}.</p>
+        <p class="discret">Gains obtenus (tous joueurs) : ${detail || 'aucun'}.</p>`;
+    }, 20);
+  }
+
+  /* ================= Vue : Statistiques ================= */
+  function graphique(stats, attendu, largeurMax) {
+    const n = stats.length, haut = 190, bas = 22, gauche = 30;
+    const largeur = largeurMax, pas = (largeur - gauche - 6) / n;
+    const max = Math.max(attendu * 1.25, ...stats.map(s => s.sorties));
+    const y = v => haut - (v / max) * (haut - 14);
+    const graduations = [0, Math.round(attendu / 2), Math.round(attendu), Math.round(max / 10) * 10].filter((v, i, t) => t.indexOf(v) === i && v <= max);
+    let svg = `<svg class="graphique" viewBox="0 0 ${largeur} ${haut + bas}" role="img" aria-label="Nombre de sorties par valeur">`;
+    for (const g of graduations) svg += `<line class="grille-fond" x1="${gauche}" x2="${largeur - 4}" y1="${y(g)}" y2="${y(g)}"/><text x="${gauche - 6}" y="${y(g) + 4}" text-anchor="end">${g}</text>`;
+    stats.forEach((s, i) => {
+      const x = gauche + i * pas + pas * 0.14, w = pas * 0.72;
+      svg += `<rect class="barre-v${s.sorties > attendu ? ' chaud' : ''}" x="${x.toFixed(1)}" y="${y(s.sorties).toFixed(1)}" width="${w.toFixed(1)}" height="${(haut - y(s.sorties)).toFixed(1)}" rx="2"><title>${s.valeur} : ${s.sorties} sorties</title></rect>`;
+      if (n <= 12 || s.valeur % 5 === 0 || s.valeur === 1) svg += `<text x="${(x + w / 2).toFixed(1)}" y="${haut + 15}" text-anchor="middle">${s.valeur}</text>`;
+    });
+    svg += `<line class="attendu" x1="${gauche}" x2="${largeur - 4}" y1="${y(attendu)}" y2="${y(attendu)}"/></svg>`;
+    return svg;
+  }
+  function rendreStats() {
+    if (!HISTO.length) { $('#verdict-stats').innerHTML = `<p class="discret">${historiqueCharge ? "L'historique des tirages n'a pas pu être chargé." : 'Chargement des tirages…'}</p>`; return; }
+    const n = HISTO.length;
+    $('#periode-stats').textContent = `${entier(n)} tirages réels, du ${dateCourte(HISTO[0].date)} au ${dateCourte(HISTO[n - 1].date)}`;
+    const sn = statsValeurs(HISTO, false), se = statsValeurs(HISTO, true);
+    const kn = khi2(Object.fromEntries(sn.map(s => [s.valeur, s.sorties])), N, K, n);
+    const ke = khi2(Object.fromEntries(se.map(s => [s.valeur, s.sorties])), M, J, n);
+    const verdictP = k => (k.p < 0.01 ? 'écart significatif' : k.p < 0.05 ? 'écart faible, à confirmer' : 'conforme au hasard');
+    $('#verdict-stats').innerHTML = `
+      <div class="chiffre ${kn.p >= 0.05 ? 'bon' : 'mauvais'}"><span class="discret">Numéros</span><b>${verdictP(kn)}</b><span class="discret">test du khi², p = ${decimal(kn.p, 2)}</span></div>
+      <div class="chiffre ${ke.p >= 0.05 ? 'bon' : 'mauvais'}"><span class="discret">Étoiles</span><b>${verdictP(ke)}</b><span class="discret">test du khi², p = ${decimal(ke.p, 2)}</span></div>
+      <div class="chiffre"><span class="discret">Sorties attendues</span><b>${sansZeros(decimal(kn.attendu, 1))}</b><span class="discret">par numéro, ${sansZeros(decimal(ke.attendu, 1))} par étoile</span></div>`;
+    $('#graphique-numeros').innerHTML = graphique(sn, kn.attendu, 1000);
+    $('#graphique-etoiles').innerHTML = graphique(se, ke.attendu, 1000);
+    const derniers = HISTO.slice(-10).reverse();
+    $('#derniers-tirages').innerHTML = derniers.map(t => `<li><time datetime="${t.date}">${dateLongue(t.date)}</time>${combinaisonHtml(t)}</li>`).join('');
+    const absents = [...sn].sort((p, q) => q.ecart - p.ecart).slice(0, 6);
+    const absE = [...se].sort((p, q) => q.ecart - p.ecart).slice(0, 3);
+    $('#absents').innerHTML = absents.map(s => `<span class="pastille">${s.valeur} · ${s.ecart} tirages</span>`).join('')
+      + absE.map(s => `<span class="pastille or">★ ${s.valeur} · ${s.ecart} tirages</span>`).join('');
+    if (POP) {
+      $('#intro-popularite').textContent = `Estimé d'après les gains réels : quand des numéros très joués sortent, le gain par gagnant baisse. Le modèle prédit les tirages récents avec une corrélation de ${decimal(POP.correlation, 2)}. Cela ne change pas vos chances, seulement le partage d'un gain.`;
+      const barres = (liste, cls, max) => liste.map(([v, f]) => `<div class="barre-h"><b>${v}</b><span class="piste"><span class="${cls}" style="width:${Math.min(100, (Math.abs(f - 1) / max) * 100)}%"></span></span><span>${Math.round(Math.abs(f - 1) * 100) === 0 ? '±0' : (f >= 1 ? '+' : '−') + Math.round(Math.abs(f - 1) * 100)}${ESP}%</span></div>`).join('');
+      const classe = POP.numeros.map((f, i) => [i + 1, f]).sort((p, q) => q[1] - p[1]);
+      const maxN = Math.max(...POP.numeros.map(f => Math.abs(f - 1)));
+      $('#plus-joues').innerHTML = '<span class="etiquette">Les plus joués</span>' + barres(classe.slice(0, 8), 'plus-joue', maxN);
+      $('#moins-joues').innerHTML = '<span class="etiquette">Les moins joués</span>' + barres(classe.slice(-8).reverse(), 'moins-joue', maxN);
+      const etoiles = POP.etoiles.map((f, i) => [i + 1, f]).sort((p, q) => q[1] - p[1]);
+      const maxE = Math.max(...POP.etoiles.map(f => Math.abs(f - 1)));
+      $('#popularite-etoiles').innerHTML = etoiles.map(([v, f]) => barres([[v, f]], f >= 1 ? 'plus-joue' : 'moins-joue', maxE)).join('');
+    } else {
+      $('#intro-popularite').textContent = 'Popularité indisponible sans historique.';
+    }
+  }
+
+  /* ================= Navigation et événements ================= */
+  const RENDUS = { grille: rendreVueGrille, generer: rendreGenerer, chances: rendreChances, rentabilite: rendreEsperance, stats: rendreStats };
+  function afficherVue(vue) {
+    if (!RENDUS[vue]) vue = 'grille';
+    etat.vue = vue;
+    for (const b of document.querySelectorAll('.onglet')) b.setAttribute('aria-selected', b.dataset.vue === vue ? 'true' : 'false');
+    for (const s of document.querySelectorAll('.vue[role="tabpanel"]')) s.hidden = s.id !== `vue-${vue}`;
+    if (window.scrollY > 0) window.scrollTo({ top: 0 });
+    RENDUS[vue]();
+    sauver();
+  }
+  function relier() {
+    $('.onglets').addEventListener('click', ev => { const b = ev.target.closest('.onglet'); if (b) afficherVue(b.dataset.vue); });
+    $('.onglets').addEventListener('keydown', ev => {
+      if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+      const onglets = [...document.querySelectorAll('.onglet')];
+      const i = onglets.findIndex(b => b.getAttribute('aria-selected') === 'true');
+      const suivant = onglets[(i + (ev.key === 'ArrowRight' ? 1 : onglets.length - 1)) % onglets.length];
+      suivant.focus();
+      afficherVue(suivant.dataset.vue);
+    });
+    $('#bulletin-numeros').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-numero]');
+      if (!b) return;
+      if (!basculer(etat.numeros, Number(b.dataset.numero), JEU.multipleNumerosMax)) messageCopie(`${JEU.multipleNumerosMax} numéros au maximum`);
+      sauver(); rendreVueGrille();
+    });
+    $('#bulletin-etoiles').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-etoile]');
+      if (!b) return;
+      if (!basculer(etat.etoiles, Number(b.dataset.etoile), JEU.multipleBonusMax)) messageCopie(`${JEU.multipleBonusMax} étoiles au maximum`);
+      sauver(); rendreVueGrille();
+    });
+    $('#btn-hasard').addEventListener('click', () => { const g = genererUne('aleatoire', [], [], null); etat.numeros = g.numeros; etat.etoiles = g.etoiles; sauver(); rendreVueGrille(); });
+    $('#btn-effacer').addEventListener('click', () => { etat.numeros = []; etat.etoiles = []; sauver(); rendreVueGrille(); });
+    $('#btn-copier-grille').addEventListener('click', () => {
+      if (etat.numeros.length < K || etat.etoiles.length < J) { messageCopie('Cochez d\'abord votre grille'); return; }
+      copier(texteGrille({ numeros: etat.numeros, etoiles: etat.etoiles }));
+    });
+    $('#choix-tirage').addEventListener('change', ev => { etat.tirage = ev.target.value; sauver(); rendreTirage(); });
+    $('#tirage-manuel').addEventListener('input', ev => { etat.tirageManuel = ev.target.value; sauver(); rendreTirage(); });
+    $('#opt-etoile-plus').addEventListener('change', ev => { etat.etoilePlus = ev.target.checked; sauver(); rendreVueGrille(); });
+    for (const r of document.querySelectorAll('input[name="strategie"]')) r.addEventListener('change', ev => { etat.strategie = ev.target.value; sauver(); });
+    $('#nb-grilles').addEventListener('input', ev => { etat.nbGrilles = Number(ev.target.value); $('#nb-grilles-valeur').textContent = etat.nbGrilles; sauver(); });
+    $('#fav-numeros').addEventListener('input', ev => { etat.favN = ev.target.value; sauver(); });
+    $('#fav-etoiles').addEventListener('input', ev => { etat.favE = ev.target.value; sauver(); });
+    $('#btn-generer').addEventListener('click', actionGenerer);
+    $('#btn-copier-tout').addEventListener('click', () => copier(grillesGenerees.map(texteGrille).join('\n')));
+    $('#grilles-generees').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-verifier]');
+      if (!b) return;
+      const g = grillesGenerees[Number(b.dataset.verifier)];
+      etat.numeros = [...g.numeros]; etat.etoiles = [...g.etoiles];
+      afficherVue('grille');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    $('#opt-tableau-ep').addEventListener('change', ev => { etat.tableauEP = ev.target.checked; sauver(); rendreChances(); });
+    $('#mult-numeros').addEventListener('change', ev => { etat.multN = Number(ev.target.value); sauver(); rendreMultiple(); });
+    $('#mult-etoiles').addEventListener('change', ev => { etat.multE = Number(ev.target.value); sauver(); rendreMultiple(); });
+    $('#jackpot').addEventListener('input', ev => { etat.jackpot = Number(ev.target.value); sauver(); rendreEsperance(); });
+    for (const r of document.querySelectorAll('input[name="situation"]')) r.addEventListener('change', ev => { etat.situation = ev.target.value; if (etat.situation === 'normal' && etat.jackpot >= C.plafond / 1e6) etat.jackpot = 50; sauver(); rendreEsperance(); });
+    $('#esp-etoile-plus').addEventListener('change', ev => { etat.espEP = ev.target.checked; sauver(); rendreEsperance(); });
+    $('#esp-ma-grille').addEventListener('change', ev => { etat.espGrille = ev.target.checked; sauver(); rendreEsperance(); });
+    $('#sim-annees').addEventListener('input', ev => { etat.simAnnees = Number(ev.target.value); $('#sim-annees-valeur').textContent = `${etat.simAnnees} an${etat.simAnnees > 1 ? 's' : ''}`; sauver(); });
+    $('#sim-grilles').addEventListener('input', ev => { etat.simGrilles = Number(ev.target.value); $('#sim-grilles-valeur').textContent = etat.simGrilles; sauver(); });
+    $('#btn-simuler').addEventListener('click', actionSimuler);
+  }
+  function appliquerEtatAuxControles() {
+    $('#opt-etoile-plus').checked = etat.etoilePlus;
+    for (const r of document.querySelectorAll('input[name="strategie"]')) r.checked = r.value === etat.strategie;
+    $('#nb-grilles').value = etat.nbGrilles;
+    $('#fav-numeros').value = etat.favN;
+    $('#fav-etoiles').value = etat.favE;
+    $('#opt-tableau-ep').checked = etat.tableauEP;
+    for (const r of document.querySelectorAll('input[name="situation"]')) r.checked = r.value === etat.situation;
+    $('#esp-etoile-plus').checked = etat.espEP;
+    $('#esp-ma-grille').checked = etat.espGrille;
+    $('#sim-annees').value = etat.simAnnees;
+    $('#sim-annees-valeur').textContent = `${etat.simAnnees} an${etat.simAnnees > 1 ? 's' : ''}`;
+    $('#sim-grilles').value = etat.simGrilles;
+    $('#sim-grilles-valeur').textContent = etat.simGrilles;
+  }
+  function decoderHistorique(h) {
+    return h.lignes.map(l => {
+      const d = String(l[0]);
+      return {
+        date: `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`, numeros: l.slice(1, 6), etoiles: l.slice(6, 8),
+        rapports: l.slice(8, 21), gagnants: l.slice(21, 34), rapportsEP: l.slice(34, 44), gagnantsEP: l.slice(44, 54),
+      };
+    });
+  }
+  async function chargerHistorique() {
+    const brut = $('#donnees-historique').textContent.trim();
+    try {
+      if (brut) return decoderHistorique(JSON.parse(brut));
+      const reponse = await fetch('historique.json');
+      if (!reponse.ok) return [];
+      return decoderHistorique(await reponse.json());
+    } catch (_) {
+      return [];
+    }
+  }
+  async function demarrer() {
+    $('#reference-reglement').textContent = JEU.reference;
+    construireBulletin();
+    remplirMultiples();
+    appliquerEtatAuxControles();
+    relier();
+    remplirChoixTirage();
+    afficherVue(etat.vue);
+    HISTO = await chargerHistorique();
+    historiqueCharge = true;
+    $('#info-donnees').textContent = HISTO.length
+      ? `${entier(HISTO.length)} tirages officiels FDJ, jusqu'au ${dateLongue(HISTO[HISTO.length - 1].date)}`
+      : 'Historique des tirages indisponible';
+    remplirChoixTirage();
+    afficherVue(etat.vue);
+  }
+
+  window.CalculateurEuroMillions = {
+    comb, nbCorr, probaRang, probaGain, gainMoyen, nbSimples, erreurMultiple, repartition, analyseMultiple, indice, motifs,
+    profilEquilibre, generer, esperance, jackpotRentable, estimerVentes, pValeurKhi2, khi2, statsValeurs, retro, lireCombinaison,
+    simuler, TABLE, EP, TOTAL, historique: () => HISTO,
+  };
+  demarrer();
+})();
+</script>
+<!--FIN_PAGE-->
+</body>
+</html>

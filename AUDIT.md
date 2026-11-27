@@ -7,10 +7,12 @@ de probabilités dans la documentation**, des **règles du Loto incomplètes**, 
 (plantages, grilles invalides, rangs mal calculés) et un discours laissant entendre que certaines
 stratégies amélioraient les chances. Elle ne gérait pas l'EuroMillions.
 
-Le projet a été réécrit en un package Python sans dépendance, **centré sur l'EuroMillions –
-My Million et l'Étoile+**, dont toutes les règles proviennent des règlements officiels de la FDJ
-et toutes les statistiques des 1 061 tirages réels publiés par la FDJ. Chaque chiffre affiché est
-vérifié par une suite de 149 tests (Python 3.10 à 3.14, typage `mypy --strict`).
+Le projet a été réécrit en un package Python sans dépendance, **consacré à l'EuroMillions –
+My Million et à l'Étoile+**, avec une **interface graphique autonome** (`interface.html`, à ouvrir
+d'un double-clic). Toutes les règles proviennent du règlement officiel de la FDJ et toutes les
+statistiques des 1 061 tirages réels publiés par la FDJ. Chaque chiffre affiché est vérifié par
+plus de 140 tests (Python 3.10 à 3.14, typage `mypy --strict`), y compris l'égalité des calculs
+de l'interface avec ceux de la bibliothèque.
 
 ## Méthode
 
@@ -38,22 +40,29 @@ vérifié par une suite de 149 tests (Python 3.10 à 3.14, typage `mypy --strict
 | 10 | Mineure | CLI : fermeture de l'entrée standard → trace `EOFError` ; `except Exception` générique masquant les erreurs. | Menu robuste (fin de saisie, Ctrl-C), erreurs utilisateur affichées proprement, code de sortie 2. |
 | 11 | Mineure | Générateur `random` sans graine possible ni générateur cryptographique. | `SystemRandom` par défaut, graine optionnelle pour la reproductibilité. |
 | 12 | Mineure | `exemples.py` bloquant (`input()` entre chaque exemple), objets inutilisés dans la CLI, réimplémentation de `math.comb` par factorielles. | Exemples non interactifs, code simplifié. |
-| 13 | Qualité | Aucun test, pas de packaging, pas d'intégration continue, licence « MIT » annoncée sans fichier `LICENSE`, URL de clonage factice, structure du README incomplète. | 149 tests, `pyproject.toml` (commande `proba-loto`), GitHub Actions, `LICENSE`, documentation réécrite. |
+| 13 | Qualité | Aucun test, pas de packaging, pas d'intégration continue, licence « MIT » annoncée sans fichier `LICENSE`, URL de clonage factice, structure du README incomplète. | Plus de 140 tests, `pyproject.toml` (commande `proba-loto`), GitHub Actions, `LICENSE`, documentation réécrite. |
 
 Les anciens scripts `loto_calculator.py` et `loto_cli.py` sont remplacés par le package
 `proba_loto` (`python3 -m proba_loto`) ; `exemples.py` a été réécrit.
 
 **Fusion avec `main` (26/11/2026).** En parallèle, une autre session avait poussé sur `main` une
-interface graphique Loto (`interface.html`) et des correctifs de l'ancien code Loto (constats 1 à
-6 ci-dessus). L'interface, dont les formules et la détermination des rangs ont été vérifiées, est
-conservée et documentée. Les correctifs de l'ancien code étant tous couverts par `proba_loto`,
-les anciens scripts restent supprimés ; ils demeurent consultables dans l'historique git.
+interface graphique Loto et des correctifs de l'ancien code Loto (constats 1 à 6 ci-dessus). Les
+correctifs étant tous couverts par `proba_loto`, les anciens scripts restent supprimés ; ils
+demeurent consultables dans l'historique git.
+
+**Recentrage sur l'EuroMillions (27/11/2026).** À la demande de l'utilisateur, le Loto a été
+entièrement retiré (règles, ligne de commande, tests, documentation) et l'interface Loto remplacée
+par une interface EuroMillions complète, plus intuitive que la ligne de commande.
 
 ## Ce qui a été construit (EuroMillions en priorité)
 
+* **Interface graphique** (`interface.html`) : page autonome, hors ligne, adaptée au téléphone et
+  au thème sombre, avec bulletin à cocher, vérification sur les tirages officiels, rétro-test,
+  générateur, probabilités, multiples, rentabilité, simulation et statistiques. Elle est générée à
+  partir des mêmes règles et données que la bibliothèque (`python -m proba_loto` l'ouvre).
 * **Règles officielles décrites comme des données** (`jeux.py`) : EuroMillions (13 rangs, parts
   de chaque rang, 2,20 € + 0,30 € My Million, 1,10 € par grille aux gagnants, jackpot minimum
-  17 M€, plafond 250 M€), Étoile+ (10 rangs, 1 €, 60 % redistribués), Loto (9 rangs).
+  17 M€, plafond 250 M€) et Étoile+ (10 rangs, 1 €, 60 % redistribués).
 * **Probabilités exactes** de chaque rang, avec gain moyen théorique et durées d'attente.
 * **Grilles multiples** : tableau officiel des combinaisons autorisées et des prix, probabilités
   exactes, tableau des gains selon le tirage, vérification par décomposition.
@@ -67,14 +76,14 @@ les anciens scripts restent supprimés ; ils demeurent consultables dans l'histo
 * **Popularité des numéros** estimée à partir des rapports réels (régression ridge en Python pur),
   validée hors échantillon, et **stratégie anti-partage** qui s'en sert.
 * **Rétro-test** d'une grille sur tout l'historique et **simulation** de Monte-Carlo.
-* **CLI complète et menu interactif**, sorties en français, messages d'erreur clairs.
+* **Ligne de commande et menu dans le terminal** pour les utilisateurs avancés.
 
 ## Vérifications effectuées
 
 | Vérification | Résultat |
 |---|---|
-| 13 rangs EuroMillions, 10 rangs Étoile+, 9 rangs Loto | identiques aux tableaux des règlements (au dixième ou à l'unité près, selon la précision publiée) |
-| 33 configurations multiples EuroMillions et 32 Loto, avec leurs prix | identiques aux tableaux officiels |
+| 13 rangs EuroMillions et 10 rangs Étoile+ | identiques aux tableaux du règlement (au dixième près, précision publiée) |
+| 33 configurations multiples, avec leurs prix | identiques au tableau officiel |
 | Formule des probabilités | confirmée par énumération exhaustive d'un jeu réduit ; somme des issues = 1 exactement |
 | Gains des multiples | identiques à la décomposition en grilles simples (40 multiples aléatoires, EuroMillions et Étoile+) |
 | Gains moyens théoriques des rangs 5 à 13 | à moins de 10 % des moyennes réelles de 711 tirages (2020-2026) ; rang 13 : 4,00 € contre 3,98 € |
@@ -82,6 +91,8 @@ les anciens scripts restent supprimés ; ils demeurent consultables dans l'histo
 | Équité des tirages réels | khi² corrigé : p = 0,29 (numéros), p = 0,18 (étoiles) |
 | Modèle de popularité | corrélation de 0,97 sur les tirages récents non utilisés pour l'estimation ; coefficients stables entre les deux moitiés de l'historique (corrélation > 0,97) |
 | Générateur aléatoire | uniformité vérifiée sur 20 000 grilles ; indice de popularité moyen = 1,00 sur grilles aléatoires |
+| Interface : calculs JavaScript contre bibliothèque Python | aucun écart sur probabilités, gains moyens, 33 multiples, 300 répartitions de gains, popularité, motifs et profil de 404 grilles, 96 cas d'espérance, p-valeurs, khi² et 26 rétro-tests |
+| Interface : rendu | aucune erreur JavaScript, aucun débordement horizontal sur téléphone (390 px) ni sur ordinateur, thèmes clair et sombre |
 | Python 3.10, 3.11, 3.12, 3.13, 3.14 et `mypy --strict` | tous les tests passent, aucune erreur de typage |
 
 ## Anomalies relevées dans les sources officielles
@@ -108,12 +119,12 @@ les anciens scripts restent supprimés ; ils demeurent consultables dans l'histo
   indépendants. Les motifs très joués (suites, dates, dernier tirage…) sont donc écartés
   séparément par le générateur. Si beaucoup de joueurs adoptaient la stratégie anti-partage, les
   numéros qu'elle privilégie deviendraient populaires : la pondération est volontairement modérée.
-* **Loto** : probabilités, génération, vérification, multiples et analyse sont disponibles, mais
-  pas l'espérance ni les statistiques (l'historique du Loto n'est pas intégré).
+* **Interface** : les données sont intégrées à la page. Après `maj`, la commande
+  `python -m proba_loto` ouvre une page à jour ; le fichier `interface.html` du dépôt doit être
+  régénéré (un test le vérifie).
 
 ## Pistes
 
-* Intégrer l'historique officiel du Loto (publié par la FDJ au même format) pour étendre
-  statistiques, popularité et rétro-test.
 * Mettre à jour `jeux.py` dès la publication du règlement de la réforme EuroMillions de 2027.
-* Proposer une interface web statique reprenant les calculs pour les non-utilisateurs de Python.
+* Publier `interface.html` avec GitHub Pages pour l'ouvrir sans téléchargement.
+* Automatiser la mise à jour des tirages (tâche planifiée qui lance `maj` et régénère la page).

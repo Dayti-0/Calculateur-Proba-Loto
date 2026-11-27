@@ -14,7 +14,7 @@ from proba_loto.grilles import (
     repartition_gains,
     verifier,
 )
-from proba_loto.jeux import ETOILE_PLUS, EUROMILLIONS as EM, LOTO
+from proba_loto.jeux import ETOILE_PLUS, EUROMILLIONS as EM
 from proba_loto.multiples import analyser_multiple, cout_multiple
 from proba_loto.probabilites import probabilite_gain, probabilite_rang
 
@@ -28,8 +28,6 @@ TABLEAU_FDJ_EUROMILLIONS = {
     9: {2: 126, 3: 378},
     10: {2: 252},
 }
-# Tableau officiel Loto (art. 3.1.1.6 et 5.1) : numéros → N° Chance autorisés.
-TABLEAU_FDJ_LOTO = {5: range(1, 11), 6: range(1, 11), 7: range(1, 9), 8: range(1, 4), 9: range(1, 2)}
 
 
 def test_formats_de_saisie_equivalents():
@@ -43,7 +41,6 @@ def test_formats_de_saisie_equivalents():
         "3 5 37 44 49 5 6",
     ):
         assert Grille.depuis_texte(EM, texte) == attendu
-    assert Grille.depuis_texte(LOTO, "1 2 3 4 5 chance 7") == Grille.simple(LOTO, [1, 2, 3, 4, 5], [7])
 
 
 def test_numeros_tries_et_affichage():
@@ -52,7 +49,6 @@ def test_numeros_tries_et_affichage():
     assert grille.bonus == (5, 6)
     assert str(grille) == "03 05 37 44 49  ★  05 06"
     assert repr(grille) == "Grille(euromillions: 03 05 37 44 49  ★  05 06)"
-    assert str(Grille.simple(LOTO, [1, 2, 3, 4, 5], [7])) == "01 02 03 04 05  |  N° Chance 7"
 
 
 @pytest.mark.parametrize(
@@ -76,8 +72,6 @@ def test_grilles_invalides(texte, message):
 def test_grille_simple_exigee():
     with pytest.raises(ErreurGrille, match="exactement"):
         Grille.depuis_texte(EM, "1 2 3 4 5 6 + 1 2", autoriser_multiple=False)
-    with pytest.raises(ErreurGrille):
-        Grille.depuis_texte(LOTO, "1 2 3 4 5 + 11")
 
 
 def test_tableau_officiel_des_multiples_euromillions():
@@ -93,16 +87,6 @@ def test_tableau_officiel_des_multiples_euromillions():
     assert cout_multiple(EM, 5, 2, [ETOILE_PLUS]) == Fraction("3.5")
     assert cout_multiple(EM, 6, 12, [ETOILE_PLUS]) == 1386
     assert cout_multiple(EM, 9, 3, [ETOILE_PLUS]) == 1323
-
-
-def test_tableau_officiel_des_multiples_loto():
-    autorisees = {}
-    for n, c in configurations_multiples(LOTO):
-        autorisees.setdefault(n, []).append(c)
-    assert autorisees == {n: list(r) for n, r in TABLEAU_FDJ_LOTO.items()}
-    assert cout_multiple(LOTO, 9, 1) == Fraction("277.2")
-    assert cout_multiple(LOTO, 8, 3) == Fraction("369.6")
-    assert cout_multiple(LOTO, 6, 10) == 132
 
 
 def test_rang_de_chaque_correspondance():
@@ -143,8 +127,6 @@ def test_verification_tirage_et_jeux():
     assert resultat.nb_gagnantes == 18
     with pytest.raises(ErreurGrille):
         verifier(tirage, grille)  # un tirage ne peut pas être une multiple
-    with pytest.raises(ErreurGrille):
-        verifier(Grille.depuis_texte(LOTO, "1 2 3 4 5 + 1"), tirage)
 
 
 def test_repartition_reproduit_le_tableau_fdj():

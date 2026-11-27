@@ -1,13 +1,10 @@
-"""Règles officielles des jeux pris en charge, décrites comme des données.
+"""Règles officielles de l'EuroMillions – My Million, décrites comme des données.
 
-Toutes les valeurs proviennent des règlements de la Française des Jeux :
-
-* EuroMillions – My Million et Étoile+ : règlement homologué par l'ANJ le
-  27 mars 2025 (décision 2025-PR-054, dernière modification du 17 janvier 2025).
-  Articles 2.4 (mise), 3.1 (combinaisons multiples), 4.2.2 à 4.2.5 (rangs,
-  répartition, plafond), 5 (My Million) et 6 (Étoile+).
-* Loto : règlement homologué par l'ANJ le 19 février 2026 (décision
-  2026-PR-023). Articles 3.1.1.6 (multiples), 5.1 (mise) et 8 (rangs).
+Toutes les valeurs proviennent du règlement EuroMillions – My Million et Étoile+
+de la Française des Jeux, homologué par l'ANJ le 27 mars 2025 (décision
+2025-PR-054, dernière modification du 17 janvier 2025) : articles 2.4 (mise),
+3.1 (combinaisons multiples), 4.2.2 à 4.2.5 (rangs, répartition, plafond),
+5 (My Million) et 6 (Étoile+).
 
 Décrire les règles comme des données (et non dans le code des calculs) permet
 d'intégrer une évolution du règlement — par exemple la réforme de l'EuroMillions
@@ -26,7 +23,6 @@ __all__ = [
     "Jeu",
     "EUROMILLIONS",
     "ETOILE_PLUS",
-    "LOTO",
     "JEUX",
     "obtenir_jeu",
     "MY_MILLION_MISE",
@@ -44,18 +40,14 @@ class Rang:
     """Un rang de gain.
 
     ``correspondances`` liste les couples (bons numéros, bons numéros
-    complémentaires) qui donnent droit à ce rang : un seul couple en général,
-    deux pour le rang 9 du Loto (1 numéro + N° Chance, ou N° Chance seul).
+    complémentaires) qui donnent droit à ce rang.
 
-    ``part`` est la fraction de la masse des gains affectée au rang (jeux de
-    répartition) ; ``gain_fixe`` est utilisé pour un gain forfaitaire (rang de
-    contrepartie du Loto).
+    ``part`` est la fraction de la masse des gains affectée au rang.
     """
 
     numero: int
     correspondances: Tuple[Tuple[int, int], ...]
     part: Optional[Fraction] = None
-    gain_fixe: Optional[Fraction] = None
 
 
 @dataclass(frozen=True)
@@ -126,20 +118,13 @@ class Jeu:
         raise KeyError(f"{self.nom} : option inconnue « {nom} »")
 
     def libelle_bonus(self, nombre: int) -> str:
-        """« 2 étoiles », « 1 étoile », « 0 étoile », « N° Chance »..."""
-        if self.bonus_par_grille == 1:
-            return self.bonus_nom if nombre else ""
+        """« 2 étoiles », « 1 étoile », « 0 étoile »."""
         nom = self.bonus_nom_pluriel if nombre > 1 else self.bonus_nom
         return f"{nombre} {nom}"
 
     def libelle_correspondance(self, bons_numeros: int, bons_bonus: int) -> str:
         numeros = f"{bons_numeros} numéro{'s' if bons_numeros > 1 else ''}"
-        bonus = self.libelle_bonus(bons_bonus)
-        if self.bonus_par_grille == 1:
-            if not bons_bonus:
-                return numeros
-            return f"{numeros} + {bonus}" if bons_numeros else f"{bonus} seul"
-        return f"{numeros} + {bonus}"
+        return f"{numeros} + {self.libelle_bonus(bons_bonus)}"
 
     def libelle_rang(self, rang: Rang) -> str:
         return " ou ".join(self.libelle_correspondance(a, b) for a, b in rang.correspondances)
@@ -243,55 +228,11 @@ EUROMILLIONS = Jeu(
     ),
 )
 
-# ---------------------------------------------------------------------------
-# Loto (règlement FDJ, février 2026)
-# ---------------------------------------------------------------------------
-
-LOTO = Jeu(
-    cle="loto",
-    nom="Loto",
-    numeros_max=49,
-    numeros_par_grille=5,
-    bonus_max=10,
-    bonus_par_grille=1,
-    bonus_nom="N° Chance",
-    bonus_nom_pluriel="N° Chance",
-    prix_grille=_f("2.20"),
-    gains=TableDeGains(
-        nom="Loto",
-        rangs=(
-            # Les parts des rangs 2 à 8 portent sur le reliquat de la masse des
-            # gains, après financement du rang 1, du Fonds de Super Cagnotte et
-            # du rang 9 (art. 8.1.1.3).
-            Rang(1, ((5, 1),)),
-            Rang(2, ((5, 0),), part=_f("0.0844")),
-            Rang(3, ((4, 1),), part=_f("0.0206")),
-            Rang(4, ((4, 0),), part=_f("0.0743")),
-            Rang(5, ((3, 1),), part=_f("0.0444")),
-            Rang(6, ((3, 0),), part=_f("0.1598")),
-            Rang(7, ((2, 1),), part=_f("0.1243")),
-            Rang(8, ((2, 0),), part=_f("0.4922")),
-            Rang(9, ((1, 1), (0, 1)), gain_fixe=_f("2.20")),
-        ),
-        mise=_f("2.20"),
-        part_gagnants=_f("0.5485"),
-    ),
-    options=(),
-    multiple_numeros_max=9,
-    multiple_bonus_max=10,
-    multiple_combinaisons_max=168,
-    jours_tirage=("lundi", "mercredi", "samedi"),
-    reference=(
-        "Règlement FDJ du Loto, homologué par l'ANJ le 19 février 2026 "
-        "(décision 2026-PR-023)"
-    ),
-)
-
-JEUX = {jeu.cle: jeu for jeu in (EUROMILLIONS, LOTO)}
+JEUX = {EUROMILLIONS.cle: EUROMILLIONS}
 
 
 def obtenir_jeu(nom: str) -> Jeu:
-    """Retourne un jeu à partir de son nom (« euromillions », « EuroMillions », « loto »...)."""
+    """Retourne un jeu à partir de son nom (« euromillions », « EuroMillions », « em »)."""
     cle = _normaliser(nom)
     alias = {"em": "euromillions", "euromillion": "euromillions"}
     cle = alias.get(cle, cle)
