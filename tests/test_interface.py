@@ -1,6 +1,7 @@
 """Interface graphique : génération de la page et cohérence avec la bibliothèque."""
 
 import json
+import math
 import re
 
 import pytest
@@ -51,15 +52,34 @@ def test_fragment_publiable(page):
         interface.extraire_fragment("<html></html>")
 
 
+def _sans_donnees(page):
+    return re.sub(r'(<script id="donnees-[a-z]+" type="application/json">).*?(</script>)', r"\1\2", page, flags=re.S)
+
+
+def _proches(a, b):
+    """Égalité tolérante pour les nombres flottants (calculs pouvant varier d'un système à l'autre)."""
+    if isinstance(a, float) or isinstance(b, float):
+        return isinstance(a, (int, float)) and isinstance(b, (int, float)) and math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-12)
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(_proches(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_proches(x, y) for x, y in zip(a, b))
+    return a == b
+
+
 def test_page_livree_a_jour():
     """interface.html (racine du dépôt) doit être régénérée après toute modification."""
     if not interface.INTERFACE_DEPOT.exists():
         pytest.skip("page absente (installation sans le dépôt)")
+    livree = interface.INTERFACE_DEPOT.read_text(encoding="utf-8")
     attendu = interface.construire_page(lire_csv_normalise(DONNEES_EMBARQUEES))
-    assert interface.INTERFACE_DEPOT.read_text(encoding="utf-8") == attendu, (
+    message = (
         "interface.html n'est pas à jour : lancez « python -m proba_loto --donnees "
         "proba_loto/data/euromillions.csv interface --sortie interface.html --sans-ouvrir »"
     )
+    assert _sans_donnees(livree) == _sans_donnees(attendu), message
+    assert _proches(json.loads(_bloc(livree, "donnees-regles")), json.loads(_bloc(attendu, "donnees-regles"))), message
+    assert json.loads(_bloc(livree, "donnees-historique")) == json.loads(_bloc(attendu, "donnees-historique")), message
 
 
 def test_ecriture_et_ouverture(tmp_path, historique, monkeypatch):
