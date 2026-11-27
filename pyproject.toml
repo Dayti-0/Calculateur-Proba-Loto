@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proba-loto"
+version = "2.0.0"
+description = "Calculateur EuroMillions et Loto (FDJ) : probabilités exactes, grilles multiples, espérance de gain et statistiques sur les tirages réels"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["euromillions", "loto", "fdj", "probabilités", "loterie", "statistiques"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: French",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Environment :: Console",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "mypy>=1.5"]
+
+[project.scripts]
+proba-loto = "proba_loto.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["proba_loto*"]
+
+[tool.setuptools.package-data]
+proba_loto = ["data/*.csv", "data/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "proba_loto", "README.md"]
+addopts = "--doctest-modules --doctest-glob=README.md"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["proba_loto"]
